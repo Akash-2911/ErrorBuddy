@@ -1,17 +1,13 @@
-// Temporary stand-ins for Aryan's, Shivang's and Ritesh's modules so the shell runs alone.
+// Temporary stand-ins for Aryan's and Shivang's modules so the shell runs alone.
 // Deleted at merge time (see ERRORBUDDY_PLAN.md section 5).
-import * as vscode from 'vscode';
 import {
   BuddyError,
   BuddyResponse,
   Explainer,
-  FromPanel,
   GameEngine,
   GameState,
   Personality,
-  PanelController,
   RealPersonality,
-  ToPanel,
 } from './types';
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -66,55 +62,3 @@ export function createStubGame(): GameEngine {
   };
 }
 
-/**
- * Logs every message to the Output channel instead of drawing anything.
- * Also fills the sidebar view with a placeholder so it isn't an empty "no data provider" box.
- */
-export class StubPanel implements PanelController, vscode.WebviewViewProvider {
-  static readonly viewId = 'errorBuddy.panel';
-  private handler: ((msg: FromPanel) => void) | undefined;
-
-  constructor(private readonly output: vscode.OutputChannel) {}
-
-  resolveWebviewView(view: vscode.WebviewView): void {
-    view.webview.html = `<!DOCTYPE html><html><body style="font-family: var(--vscode-font-family); padding: 8px">
-      <p>🏴‍☠️ ErrorBuddy (stub panel)</p>
-      <p>The real panel isn't merged yet. Messages are logged to the <b>ErrorBuddy</b> Output channel.</p>
-    </body></html>`;
-    // The real panel sends 'ready' when it loads; mimic that.
-    this.handler?.({ type: 'ready' });
-  }
-
-  post(msg: ToPanel): void {
-    this.output.appendLine(`[${new Date().toLocaleTimeString()}] → ${describe(msg)}`);
-  }
-
-  onMessage(handler: (msg: FromPanel) => void): void {
-    this.handler = handler;
-  }
-}
-
-function describe(msg: ToPanel): string {
-  switch (msg.type) {
-    case 'thinking':
-      return `thinking   ${msg.personality} @ ${where(msg.error)}  ${firstLine(msg.error.message)}`;
-    case 'response':
-      return `response   ${msg.response.personality}${msg.response.legendary ? ' ⚡LEGENDARY⚡' : ''} @ ${where(msg.error)}\n` +
-        `             reaction:    ${msg.response.reaction}\n` +
-        `             explanation: ${msg.response.explanation}\n` +
-        msg.response.fix.map((step, i) => `             fix ${i + 1}:       ${step}`).join('\n') +
-        `\n             jump to line ${msg.response.line}`;
-    case 'fixed':
-      return `fixed      @ ${where(msg.error)}  streak=${msg.streak}  "${msg.celebration}"`;
-    case 'achievement':
-      return `achievement ${msg.achievement.emoji} ${msg.achievement.title}`;
-    case 'state':
-      return `state      streak=${msg.state.streak} best=${msg.state.bestStreak} fixes=${msg.state.totalFixes} ` +
-        `personality=${msg.state.personality} unlocked=[${msg.state.unlocked.map((a) => a.id).join(', ')}]`;
-    case 'idle':
-      return 'idle';
-  }
-}
-
-const where = (e: BuddyError) => `${e.fileName}:${e.line}:${e.column}`;
-const firstLine = (s: string) => s.split('\n')[0];

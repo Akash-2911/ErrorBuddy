@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ErrorWatcher } from './errorWatcher';
-import { createStubExplainer, createStubGame, StubPanel } from './stubs';
+import { BuddyPanel } from './panel';
+import { createStubExplainer, createStubGame } from './stubs';
 import {
   Achievement,
   BuddyError,
@@ -9,6 +10,7 @@ import {
   FromPanel,
   GameEngine,
   RealPersonality,
+  ToPanel,
 } from './types';
 
 /** How long the celebration stays on screen before the panel goes idle. */
@@ -17,11 +19,19 @@ const CELEBRATION_MS = 4000;
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('ErrorBuddy');
 
-  // MERGE: createExplainer(getApiKey()), createGameEngine(context.globalState), new BuddyPanel(context.extensionUri)
+  // MERGE: createExplainer(getApiKey()), createGameEngine(context.globalState)
   const makeExplainer = (): Explainer => createStubExplainer();
   let explainer = makeExplainer();
   const game: GameEngine = createStubGame();
-  const panel = new StubPanel(output);
+  const buddyPanel = new BuddyPanel(context.extensionUri);
+  // Everything sent to the panel is also logged, which makes demo-day debugging much easier.
+  const panel = {
+    post(msg: ToPanel) {
+      output.appendLine(`[${new Date().toLocaleTimeString()}] → ${msg.type}`);
+      buddyPanel.post(msg);
+    },
+    onMessage: buddyPanel.onMessage.bind(buddyPanel),
+  };
 
   const watcher = new ErrorWatcher();
   const cache = new Map<string, BuddyResponse>();
@@ -134,7 +144,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     output,
     watcher,
-    vscode.window.registerWebviewViewProvider(StubPanel.viewId, panel),
+    vscode.window.registerWebviewViewProvider(BuddyPanel.viewId, buddyPanel),
     watcher.onNewError((error) => {
       const ticket = ++latest;
       enqueue('new error', () => handleNewError(error, ticket));
