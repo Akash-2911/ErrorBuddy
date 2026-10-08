@@ -30,22 +30,34 @@
 
     <section class="character">
       <div id="avatar" class="avatar" aria-hidden="true">😌</div>
-      <div class="bubble" aria-live="polite">
-        <p id="bubbleText" class="bubble-text">No errors. Suspiciously quiet…</p>
-        <div id="typing" class="typing" hidden aria-label="Thinking">
-          <span></span><span></span><span></span>
+      <div class="speech">
+        <div id="errorMeta" class="error-meta" hidden></div>
+        <div class="bubble" aria-live="polite">
+          <p id="bubbleText" class="bubble-text">No errors. Suspiciously quiet…</p>
+          <p id="idleHint" class="hint">Keep coding. I'll speak up the moment something breaks.</p>
+          <div id="typing" class="typing" hidden aria-label="Thinking">
+            <span></span><span></span><span></span>
+          </div>
         </div>
       </div>
-      <div id="errorMeta" class="error-meta" hidden></div>
     </section>
 
-    <section id="explainBox" class="box" hidden>
-      <h2>🤔 What happened</h2>
+    <div id="skeleton" class="skeleton" hidden aria-hidden="true">
+      <span class="sk sk-title"></span>
+      <span class="sk"></span>
+      <span class="sk sk-short"></span>
+      <span class="sk sk-title sk-gap"></span>
+      <span class="sk"></span>
+      <span class="sk sk-button"></span>
+    </div>
+
+    <section id="explainBox" class="block" hidden>
+      <h2>What happened</h2>
       <p id="explanation"></p>
     </section>
 
-    <section id="fixBox" class="box" hidden>
-      <h2>🔧 How to fix it</h2>
+    <section id="fixBox" class="block" hidden>
+      <h2>How to fix it</h2>
       <ol id="fixList"></ol>
       <button id="jumpBtn" type="button">Go to line</button>
     </section>
@@ -53,7 +65,7 @@
 
   <div id="mockBar" class="mock-bar" hidden>
     <span>Mock mode</span>
-    <button id="mockTheme" type="button">Toggle light / dark</button>
+    <button id="mockTheme" class="quiet" type="button">Toggle light / dark</button>
   </div>
 
   <script src="confetti.js"></script>

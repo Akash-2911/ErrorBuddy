@@ -26,6 +26,8 @@
     avatar: document.getElementById('avatar'),
     bubbleText: document.getElementById('bubbleText'),
     typing: document.getElementById('typing'),
+    idleHint: document.getElementById('idleHint'),
+    skeleton: document.getElementById('skeleton'),
     errorMeta: document.getElementById('errorMeta'),
     explainBox: document.getElementById('explainBox'),
     explanation: document.getElementById('explanation'),
@@ -81,6 +83,8 @@
   function setScene(name, legendary) {
     el.scene.className = 'scene is-' + name + (legendary ? ' is-legendary' : '');
     el.banner.hidden = !legendary;
+    el.idleHint.hidden = name !== 'idle';
+    el.skeleton.hidden = name !== 'thinking';
   }
 
   function setAvatar(personality) {
@@ -246,7 +250,7 @@
     var body = document.createElement('div');
     var title = document.createElement('div');
     title.className = 'toast-title';
-    title.textContent = '🏆 Unlocked: ' + achievement.title;
+    title.textContent = 'Unlocked: ' + achievement.title;
     body.appendChild(title);
     if (achievement.description) {
       var desc = document.createElement('div');
