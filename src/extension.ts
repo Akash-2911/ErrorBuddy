@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { ErrorWatcher } from './errorWatcher';
 import { createExplainer } from './ai/explainer';
+import { createGameEngine } from './game/engine';
 import { BuddyPanel } from './panel';
-import { createStubGame } from './stubs';
 import {
   Achievement,
   BuddyError,
@@ -20,10 +20,9 @@ const CELEBRATION_MS = 4000;
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('ErrorBuddy');
 
-  // MERGE: createGameEngine(context.globalState)
   const makeExplainer = (): Explainer => createExplainer(getApiKey());
   let explainer = makeExplainer();
-  const game: GameEngine = createStubGame();
+  const game: GameEngine = createGameEngine(context.globalState);
   const buddyPanel = new BuddyPanel(context.extensionUri);
   // Everything sent to the panel is also logged, which makes demo-day debugging much easier.
   const panel = {
