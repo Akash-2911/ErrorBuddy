@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ErrorWatcher } from './errorWatcher';
 import { createExplainer } from './ai/explainer';
 import { createGameEngine } from './game/engine';
+import { ErrorHighlighter } from './highlight';
 import { BuddyPanel } from './panel';
 import {
   Achievement,
@@ -34,6 +35,7 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   const watcher = new ErrorWatcher();
+  const highlighter = new ErrorHighlighter();
   const cache = new Map<string, BuddyResponse>();
 
   // What is on screen right now, so a later fix can be celebrated in the same voice.
@@ -62,6 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const result = await game.onErrorShown(error, new Date());
     shown = { errorId: error.id, personality: result.personality, legendary: result.legendary };
     panel.post({ type: 'thinking', error, personality: result.personality });
+    highlighter.show(error, result.personality, result.legendary);
 
     const cacheKey = `${error.message}::${result.personality}::${result.legendary}`;
     let response = cache.get(cacheKey);
@@ -88,6 +91,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const handleFixed = async (error: BuddyError) => {
     const was = shown?.errorId === error.id ? shown : undefined;
     shown = undefined;
+    highlighter.clear();
     const personality = was?.personality ?? 'pirate';
     const [celebration, result] = await Promise.all([
       explainer.celebrate(error, personality).catch(() => `Fixed! "${error.message}" is gone.`),
@@ -108,6 +112,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     if (ticket === latest) {
       shown = undefined;
+      highlighter.clear();
       panel.post({ type: 'idle' });
     }
   };
@@ -144,6 +149,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     output,
     watcher,
+    highlighter,
     vscode.window.registerWebviewViewProvider(BuddyPanel.viewId, buddyPanel),
     watcher.onNewError((error) => {
       const ticket = ++latest;
