@@ -15,21 +15,27 @@
   <header class="header">
     <label class="sr-only" for="personality">Personality</label>
     <select id="personality" title="Pick who reacts to your errors">
-      <option value="random">🎲 Random</option>
-      <option value="pirate">🏴‍☠️ Pirate</option>
-      <option value="sportscaster">🎙️ Sportscaster</option>
-      <option value="parent">😔 Disappointed Parent</option>
-      <option value="shakespeare">🎭 Shakespeare</option>
-      <option value="narrator">🦎 Nature Narrator</option>
+      <option value="random">Random</option>
+      <option value="pirate">Pirate</option>
+      <option value="sportscaster">Sportscaster</option>
+      <option value="parent">Disappointed Parent</option>
+      <option value="shakespeare">Shakespeare</option>
+      <option value="narrator">Nature Narrator</option>
     </select>
-    <div id="streak" class="streak" title="Fixes in a row">🔥 <span id="streakCount">0</span> in a row</div>
+    <div id="streak" class="streak" title="Fixes in a row">
+      <span class="icon-slot" data-icon="flame"></span><span id="streakCount">0</span> in a row
+    </div>
   </header>
 
   <main id="scene" class="scene is-idle">
-    <div id="legendaryBanner" class="legendary-banner" hidden>⚡ LEGENDARY ERROR ⚡</div>
+    <div id="legendaryBanner" class="legendary-banner" hidden>
+      <span class="icon-slot" data-icon="bolt"></span>
+      <span>LEGENDARY ERROR</span>
+      <span class="icon-slot" data-icon="bolt"></span>
+    </div>
 
     <section class="character">
-      <div id="avatar" class="avatar" aria-hidden="true">😌</div>
+      <div id="avatar" class="avatar" aria-hidden="true"></div>
       <div class="speech">
         <div id="errorMeta" class="error-meta" hidden></div>
         <div class="bubble" aria-live="polite">
@@ -68,6 +74,7 @@
     <button id="mockTheme" class="quiet" type="button">Toggle light / dark</button>
   </div>
 
+  <script src="pixels.js"></script>
   <script src="confetti.js"></script>
   <script src="panel.js"></script>
 </body>

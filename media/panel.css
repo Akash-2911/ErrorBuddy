@@ -69,6 +69,10 @@ body {
   --eb-radius: 10px;
   --eb-radius-inner: 5px;
   --eb-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Spring with a little overshoot, for things that pop in or react to the pointer. */
+  --eb-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --eb-ink: #1b1b2f;
+  --eb-avatar-bg: #e6f0e8;
 
   margin: 0 auto;
   padding: 12px 14px 16px;
@@ -171,26 +175,59 @@ p {
   gap: 10px;
 }
 
-.avatar {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
+/* Pixel art: every sprite pixel maps to a whole number of screen pixels. */
+.px {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.px-mascot {
   width: 48px;
   height: 48px;
-  background: var(--eb-surface);
-  border: 1px solid var(--eb-border);
-  border-radius: var(--eb-radius);
-  font-size: 26px;
-  line-height: 1;
+}
+
+.px-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-slot {
+  display: inline-block;
+  vertical-align: -3px;
+}
+
+.streak .icon-slot {
+  margin-right: 5px;
+}
+
+/* Buddy's portrait: a light sticker with a hard pixel shadow, the same in both themes. */
+.avatar {
+  flex: 0 0 auto;
+  padding: 3px;
+  background: var(--eb-avatar-bg);
+  border: 2px solid var(--eb-ink);
+  border-radius: var(--eb-radius-inner);
+  box-shadow: 3px 3px 0 var(--eb-ink);
   user-select: none;
+  transition: transform 0.35s var(--eb-spring);
+}
+
+.avatar:hover {
+  transform: translateY(-2px) rotate(-4deg);
 }
 
 .avatar.bounce {
-  animation: bounce-in 0.55s var(--eb-ease);
+  animation: bounce-in 0.5s var(--eb-spring);
 }
 
+/* An 8-bit hop: stepped, not smooth. */
 .is-fixed .avatar {
-  animation: party 0.8s ease-in-out 2;
+  animation: hop 0.5s steps(3, end) 3;
+}
+
+.bubble.pop {
+  animation: bubble-pop 0.3s var(--eb-spring);
+  transform-origin: 0 14px;
 }
 
 .speech {
@@ -305,6 +342,20 @@ p {
   counter-increment: step;
 }
 
+/* Steps arrive one after another. */
+#fixList li {
+  animation: slide-in 0.3s var(--eb-ease) both;
+  animation-delay: 0.14s;
+}
+
+#fixList li:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+#fixList li:nth-child(n + 3) {
+  animation-delay: 0.26s;
+}
+
 #fixList li + li {
   margin-top: 6px;
 }
@@ -348,15 +399,17 @@ button {
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.18s var(--eb-ease), transform 0.12s var(--eb-ease);
+  transition: background-color 0.18s var(--eb-ease), transform 0.25s var(--eb-spring);
 }
 
 button:hover {
   background: var(--eb-button-hover);
+  transform: translateY(-1px);
 }
 
 button:active {
-  transform: translateY(1px) scale(0.99);
+  transform: translateY(1px) scale(0.97);
+  transition-duration: 0.08s;
 }
 
 button:focus-visible,
@@ -426,14 +479,21 @@ button.quiet:hover {
 }
 
 .legendary-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   color: var(--eb-gold);
+  font-family: var(--vscode-editor-font-family, Consolas, "Courier New", monospace);
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-align: center;
+  letter-spacing: 0.12em;
   animation: banner-pulse 0.9s ease-in-out 3;
 }
 
-.is-legendary .avatar,
+.is-legendary .avatar {
+  --eb-avatar-bg: #ffe9a8;
+}
+
 .is-legendary .bubble,
 .is-legendary .bubble::before,
 .is-legendary .block {
@@ -478,8 +538,7 @@ button.quiet:hover {
   height: 34px;
   background: var(--eb-gold-soft);
   border-radius: var(--eb-radius-inner);
-  font-size: 19px;
-  line-height: 1;
+  color: var(--eb-gold);
 }
 
 .toast-title {
@@ -524,10 +583,19 @@ button.quiet:hover {
   100% { transform: translateY(0) scale(1); }
 }
 
-@keyframes party {
-  0%, 100% { transform: rotate(0) scale(1); }
-  25% { transform: rotate(-10deg) scale(1.1); }
-  75% { transform: rotate(10deg) scale(1.1); }
+@keyframes hop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+@keyframes bubble-pop {
+  from { transform: scale(0.94); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slide-in {
+  from { transform: translateX(-8px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes typing {

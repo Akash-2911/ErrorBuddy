@@ -2,14 +2,17 @@
 (function () {
   'use strict';
 
-  var AVATARS = {
-    pirate: '🏴‍☠️',
-    sportscaster: '🎙️',
-    parent: '😔',
-    shakespeare: '🎭',
-    narrator: '🦎'
+  var pixels = window.ErrorBuddyPixels;
+  var IDLE_MASCOT = 'idle';
+  // Pixel icon shown in the toast for each achievement.
+  var ACHIEVEMENT_ICONS = {
+    first_fix: 'check',
+    semicolon_sommelier: 'semicolon',
+    night_owl: 'moon',
+    streak_5: 'flame',
+    streak_10: 'flame',
+    legendary_hunter: 'bolt'
   };
-  var IDLE_AVATAR = '😌';
   var IDLE_TEXT = 'No errors. Suspiciously quiet…';
   var TOAST_MS = 4000;
   // How long a celebration stays up before an 'idle' message is allowed to replace it.
@@ -24,6 +27,7 @@
     scene: document.getElementById('scene'),
     banner: document.getElementById('legendaryBanner'),
     avatar: document.getElementById('avatar'),
+    bubble: document.querySelector('.bubble'),
     bubbleText: document.getElementById('bubbleText'),
     typing: document.getElementById('typing'),
     idleHint: document.getElementById('idleHint'),
@@ -41,7 +45,8 @@
 
   var jumpTarget = null;      // { file, line } for the "Go to line" button
   var shownErrorId = null;    // error the avatar last bounced in for
-  var lastAvatar = IDLE_AVATAR;
+  var lastMascot = IDLE_MASCOT; // personality whose costume Buddy last wore
+  var drawnMascot = null;
   var celebrationEndsAt = 0;
   var idleTimer = 0;
   var toastQueue = [];
@@ -87,15 +92,27 @@
     el.skeleton.hidden = name !== 'thinking';
   }
 
+  function drawMascot(name) {
+    if (name === drawnMascot) {
+      return;
+    }
+    drawnMascot = name;
+    el.avatar.textContent = '';
+    el.avatar.appendChild(pixels.mascot(name));
+  }
+
   function setAvatar(personality) {
-    lastAvatar = AVATARS[personality] || lastAvatar;
-    el.avatar.textContent = lastAvatar;
+    if (pixels.hasMascot(personality)) {
+      lastMascot = personality;
+    }
+    drawMascot(lastMascot);
   }
 
   function setBubble(text) {
     el.typing.hidden = true;
     el.bubbleText.hidden = false;
     setRichText(el.bubbleText, text);
+    restartAnimation(el.bubble, 'pop');
   }
 
   function setErrorMeta(error) {
@@ -149,6 +166,7 @@
     bounceForNewError(msg.error);
     el.bubbleText.hidden = true;
     el.typing.hidden = false;
+    restartAnimation(el.bubble, 'pop');
     setErrorMeta(msg.error);
     hideBoxes();
   }
@@ -187,8 +205,8 @@
     shownErrorId = null;
     setScene('fixed', false);
     el.avatar.classList.remove('bounce');
-    el.avatar.textContent = lastAvatar;
-    setBubble('🎉 ' + msg.celebration);
+    drawMascot(lastMascot);
+    setBubble(msg.celebration);
     el.errorMeta.hidden = true;
     hideBoxes();
     setStreak(msg.streak, true);
@@ -203,7 +221,7 @@
     shownErrorId = null;
     setScene('idle', false);
     el.avatar.classList.remove('bounce');
-    el.avatar.textContent = IDLE_AVATAR;
+    drawMascot(IDLE_MASCOT);
     setBubble(IDLE_TEXT);
     el.errorMeta.hidden = true;
     hideBoxes();
@@ -245,7 +263,7 @@
 
     var emoji = document.createElement('div');
     emoji.className = 'toast-emoji';
-    emoji.textContent = achievement.emoji || '🏆';
+    emoji.appendChild(pixels.icon(ACHIEVEMENT_ICONS[achievement.id] || 'trophy'));
 
     var body = document.createElement('div');
     var title = document.createElement('div');
@@ -324,6 +342,10 @@
     }
   });
 
+  Array.prototype.forEach.call(document.querySelectorAll('[data-icon]'), function (slot) {
+    slot.appendChild(pixels.icon(slot.dataset.icon));
+  });
+  drawMascot(IDLE_MASCOT);
   setStreak(0, false);
   send({ type: 'ready' });
 
