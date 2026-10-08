@@ -34,7 +34,7 @@ Write three things:
    Bad: "The identifier userName is not declared in the current scope."
 
 3. fix: the steps that fix THIS error, each a single short sentence. Usually one step is enough; add a second only if it is a real alternative or a second required change. Name the exact thing to change and the line it's on, and show the corrected code in backticks. NOT in character.
-   Only fix what the error message describes. If the fix depends on code you can't see (for example a definition outside the snippet), say what to check instead of guessing values. No filler steps like "save and run again".
+   Only fix what the error message describes. If the code to change is outside the snippet, point to it by name (for example "where \`settings\` is created, above") and never guess its line number or its current value; only quote values that appear in the snippet or the error message. Keep any code you show short (one small expression, not a whole rewritten statement). No filler steps like "save and run again".
 
 Also return line: the line number the user should jump to (usually the error line).
 
