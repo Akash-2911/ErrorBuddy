@@ -1,0 +1,77 @@
+{
+  "name": "errorbuddy",
+  "displayName": "ErrorBuddy",
+  "description": "A funny buddy that explains your code errors in plain English and celebrates when you fix them.",
+  "version": "0.0.1",
+  "publisher": "errorbuddy-team",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "errorBuddy",
+          "title": "ErrorBuddy",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "errorBuddy": [
+        {
+          "type": "webview",
+          "id": "errorBuddy.panel",
+          "name": "Buddy"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ErrorBuddy",
+      "properties": {
+        "errorBuddy.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Anthropic API key used for explanations. Falls back to the `ANTHROPIC_API_KEY` environment variable; with neither, ErrorBuddy uses offline canned responses."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "errorBuddy.resetStats",
+        "title": "Reset Stats",
+        "category": "ErrorBuddy"
+      },
+      {
+        "command": "errorBuddy.jumpToCurrentError",
+        "title": "Jump to Current Error",
+        "category": "ErrorBuddy"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "npm run check-types && node esbuild.js --production",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/vscode": "~1.90.0",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
