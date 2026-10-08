@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { ErrorWatcher } from './errorWatcher';
+import { createExplainer } from './ai/explainer';
 import { BuddyPanel } from './panel';
-import { createStubExplainer, createStubGame } from './stubs';
+import { createStubGame } from './stubs';
 import {
   Achievement,
   BuddyError,
@@ -19,8 +20,8 @@ const CELEBRATION_MS = 4000;
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('ErrorBuddy');
 
-  // MERGE: createExplainer(getApiKey()), createGameEngine(context.globalState)
-  const makeExplainer = (): Explainer => createStubExplainer();
+  // MERGE: createGameEngine(context.globalState)
+  const makeExplainer = (): Explainer => createExplainer(getApiKey());
   let explainer = makeExplainer();
   const game: GameEngine = createStubGame();
   const buddyPanel = new BuddyPanel(context.extensionUri);

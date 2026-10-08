@@ -1,37 +1,6 @@
-// Temporary stand-ins for Aryan's and Shivang's modules so the shell runs alone.
+// Temporary stand-in for Shivang's module so the shell runs alone.
 // Deleted at merge time (see ERRORBUDDY_PLAN.md section 5).
-import {
-  BuddyError,
-  BuddyResponse,
-  Explainer,
-  GameEngine,
-  GameState,
-  Personality,
-  RealPersonality,
-} from './types';
-
-const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-/** Returns a fixed response after a 1-second delay. */
-export function createStubExplainer(): Explainer {
-  return {
-    async explain(error: BuddyError, personality: RealPersonality, legendary: boolean): Promise<BuddyResponse> {
-      await delay(1000);
-      return {
-        errorId: error.id,
-        personality,
-        reaction: `Arr, ye've run aground on line ${error.line}!`,
-        explanation: 'Something on this line confused the computer. (Stub explainer.)',
-        fix: [`Look closely at line ${error.line}: ${error.message}`],
-        line: error.line,
-        legendary,
-      };
-    },
-    async celebrate(error: BuddyError): Promise<string> {
-      return `Yo ho ho! "${error.message}" walks the plank!`;
-    },
-  };
-}
+import { GameEngine, GameState, Personality } from './types';
 
 /** In-memory streak counter. Always pirate, never legendary, no achievements. */
 export function createStubGame(): GameEngine {
@@ -61,4 +30,3 @@ export function createStubGame(): GameEngine {
     },
   };
 }
-
