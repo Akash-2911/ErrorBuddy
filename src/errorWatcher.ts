@@ -26,6 +26,8 @@ export class ErrorWatcher implements vscode.Disposable {
   readonly onPiledUp = this.pileUpEmitter.event;
 
   private shown: BuddyError | undefined;
+  /** How many errors share the shown error's id (e.g. two "',' expected." in one file). */
+  private shownCopies = 0;
   private idle = false;
   private readonly lastCounts = new Map<string, number>();
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -86,7 +88,8 @@ export class ErrorWatcher implements vscode.Disposable {
       if (this.shown.file !== doc.uri.fsPath) {
         // Switched files: the old error wasn't fixed, we just stopped looking at it.
         this.shown = undefined;
-      } else if (!errors.some((e) => e.id === this.shown!.id)) {
+      } else if (copiesOf(errors, this.shown.id) < this.shownCopies) {
+        // Gone, or one of several identical errors was fixed.
         const fixed = this.shown;
         this.shown = undefined;
         this.fixedEmitter.fire(fixed);
@@ -103,13 +106,13 @@ export class ErrorWatcher implements vscode.Disposable {
     }
 
     this.idle = false;
-    if (this.shown?.id === first.id) {
-      this.shown = first; // same error, but its line may have moved
-      return;
-    }
-    // If the shown error still exists but is no longer first, the new first error takes over.
+    const sameAsShown = this.shown?.id === first.id;
+    // Same error: its line may have moved. Otherwise the new first error takes over.
     this.shown = first;
-    this.newErrorEmitter.fire(first);
+    this.shownCopies = copiesOf(errors, first.id);
+    if (!sameAsShown) {
+      this.newErrorEmitter.fire(first);
+    }
   }
 
   dispose(): void {
@@ -120,7 +123,11 @@ export class ErrorWatcher implements vscode.Disposable {
   }
 }
 
-function activeDocument(): vscode.TextDocument | undefined {
+function copiesOf(errors: BuddyError[], id: string): number {
+  return errors.filter((e) => e.id === id).length;
+}
+
+function activeDocument():vscode.TextDocument | undefined {
   const doc = vscode.window.activeTextEditor?.document;
   return doc && (doc.uri.scheme === 'file' || doc.uri.scheme === 'untitled') ? doc : undefined;
 }
