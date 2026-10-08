@@ -1,0 +1,19 @@
+{
+  "name": "errorbuddy",
+  "version": "0.0.1",
+  "private": true,
+  "description": "ErrorBuddy (temporary minimal package.json for the AI module; Akash's scaffold replaces this)",
+  "scripts": {
+    "try-explainer": "tsx scripts/try-explainer.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.140.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
