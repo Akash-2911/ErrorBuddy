@@ -47,6 +47,11 @@
           "default": true,
           "markdownDescription": "Read each roast out loud with your computer's built-in voice. Toggle quickly with **ErrorBuddy: Toggle Spoken Roasts**."
         },
+        "errorBuddy.voice": {
+          "type": "string",
+          "default": "David",
+          "markdownDescription": "Which installed voice reads the roasts, e.g. `David`, `Zira` or `Mark`. Add more in Windows Settings > Time & language > Speech > Add voices."
+        },
         "errorBuddy.username": {
           "type": "string",
           "default": "",

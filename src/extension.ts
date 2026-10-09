@@ -125,7 +125,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     panel.post({ type: 'response', error, response });
     if (speakRoasts()) {
-      speaker.speak(response.reaction, response.legendary);
+      speaker.speak(response.reaction, response.legendary, speechVoice());
     }
     postAchievements(result.newAchievements);
     postState();
@@ -260,6 +260,10 @@ export function deactivate(): void {}
 /** Setting first, then the ANTHROPIC_API_KEY env var. Undefined means offline/fallback mode. */
 function speakRoasts(): boolean {
   return vscode.workspace.getConfiguration('errorBuddy').get<boolean>('speakRoasts', true);
+}
+
+function speechVoice(): string {
+  return vscode.workspace.getConfiguration('errorBuddy').get<string>('voice', 'David') || 'David';
 }
 
 function getApiKey(): string | undefined {
