@@ -122,24 +122,6 @@ p {
   border-bottom: 1px solid var(--eb-border);
 }
 
-#personality {
-  flex: 1 1 140px;
-  min-width: 0;
-  max-width: 210px;
-  padding: 4px 6px;
-  background: var(--eb-input-bg);
-  color: var(--eb-input-fg);
-  border: 1px solid var(--eb-input-border);
-  border-radius: var(--eb-radius-inner);
-  font: inherit;
-  cursor: pointer;
-  transition: border-color 0.18s var(--eb-ease);
-}
-
-#personality:hover {
-  border-color: var(--eb-focus);
-}
-
 .streak {
   flex: 0 0 auto;
   font-weight: 600;

@@ -27,6 +27,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const makeExplainer = (): Explainer => createExplainer(getApiKey());
   let explainer = makeExplainer();
   const game: GameEngine = createGameEngine(context.globalState);
+  // There's no personality picker any more; an old saved pick would pin the mascot to one costume.
+  void game.setPersonality('random');
   const buddyPanel = new BuddyPanel(context.extensionUri);
   // Everything sent to the panel is also logged, which makes demo-day debugging much easier.
   const panel = {
