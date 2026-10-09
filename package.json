@@ -4,6 +4,11 @@
   "description": "A funny buddy that explains your code errors in plain English and celebrates when you fix them.",
   "version": "0.0.1",
   "publisher": "errorbuddy-team",
+  "icon": "docs/images/logo-128.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Akash-2911/ErrorBuddy.git"
+  },
   "private": true,
   "engines": {
     "vscode": "^1.90.0"
