@@ -54,13 +54,16 @@ body {
   --eb-fg: var(--vscode-foreground, var(--fb-fg));
   --eb-muted: var(--vscode-descriptionForeground, var(--fb-muted));
   --eb-surface: var(--vscode-editorWidget-background, var(--fb-surface));
-  --eb-border: var(--vscode-panel-border, var(--vscode-widget-border, var(--fb-border)));
+  /* Borders are mixed from the text colour, so they stay visible in any theme.
+     Many dark themes set their own border colours to almost the background. */
+  --eb-border: var(--vscode-contrastBorder, color-mix(in srgb, var(--eb-fg) 24%, transparent));
+  --eb-frame: var(--vscode-contrastBorder, color-mix(in srgb, var(--eb-fg) 85%, transparent));
   --eb-button-bg: var(--vscode-button-background, var(--fb-button-bg));
   --eb-button-fg: var(--vscode-button-foreground, var(--fb-button-fg));
   --eb-button-hover: var(--vscode-button-hoverBackground, var(--fb-button-hover));
   --eb-input-bg: var(--vscode-dropdown-background, var(--fb-input-bg));
   --eb-input-fg: var(--vscode-dropdown-foreground, var(--eb-fg));
-  --eb-input-border: var(--vscode-dropdown-border, var(--fb-border));
+  --eb-input-border: var(--eb-border);
   --eb-focus: var(--vscode-focusBorder, var(--fb-button-bg));
   --eb-gold: var(--fb-gold);
   --eb-gold-soft: var(--fb-gold-soft);
@@ -71,7 +74,6 @@ body {
   --eb-ease: cubic-bezier(0.22, 1, 0.36, 1);
   /* Spring with a little overshoot, for things that pop in or react to the pointer. */
   --eb-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --eb-ink: #1b1b2f;
   --eb-avatar-bg: #e6f0e8;
 
   margin: 0 auto;
@@ -205,9 +207,9 @@ p {
   flex: 0 0 auto;
   padding: 3px;
   background: var(--eb-avatar-bg);
-  border: 2px solid var(--eb-ink);
+  border: 2px solid var(--eb-frame);
   border-radius: var(--eb-radius-inner);
-  box-shadow: 3px 3px 0 var(--eb-ink);
+  box-shadow: 3px 3px 0 var(--eb-frame);
   user-select: none;
   transition: transform 0.35s var(--eb-spring);
 }
