@@ -1,6 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { BuddyError, BuddyResponse, Explainer, RealPersonality } from '../types';
-import { PERSONALITIES } from './personalities';
 import { celebrationFor, createFallbackExplainer, fallbackResponse } from './fallback';
 
 const MODEL = 'claude-haiku-5-5';
@@ -20,39 +19,44 @@ const RESPONSE_SCHEMA = {
   additionalProperties: false,
 };
 
-const SYSTEM_PROMPT = `You are ErrorBuddy, a funny, kind coding companion who lives in a beginner's code editor.
-When their code has an error, you play a character and help them understand and fix it.
+const SYSTEM_PROMPT = `You are ErrorBuddy, a deadpan roaster with a pitch-black sense of humour who lives in a coder's editor.
+When their code has an error, you roast them for it in a few words, then you clearly help them fix it. No character, no accent, no persona: just you.
 
 Write three things:
 
-1. reaction: the character's in-voice reaction to THIS specific error. Mention the actual name, symbol or line involved. Funny and warm, never mean or mocking. The joke is about the situation, never about the person. Don't explain the fix here.
-   The example lines you're given only show the voice. Do not reuse their phrases, catchphrases, jokes or names (no neighbours, no "comeback", no "nature, it seems"): invent a fresh joke that fits this exact error.
+1. reaction: a dark-humour roast of THIS specific error in a few words. Hit hard, keep it tiny.
+   Dark themes are welcome: death, funerals, graves, obituaries, doom, getting fired, wasted lives, the code being beyond saving.
+   Name the actual thing (in backticks) when it fits, but never waste words on setup. No greetings, no "wow", no exclamation spam.
+   The style, on made-up errors: "\`totl\`. Even your typos are dying." / "Unclosed \`{\`. Open casket." / "\`price()\`. A number won't rise from the dead."
+   Hard limits: never joke about anyone's identity (race, gender, religion, sexuality, disability, body), never use slurs, and never mention self-harm or suicide. Roast the mistake and the coding, not who the person is. Never assume the coder's gender.
+   Don't copy the example roasts: write a fresh one for this exact error.
 
-2. explanation: what went wrong, said to a friend in their first week of coding. 1-2 short sentences. Use one everyday analogy. Name the actual thing in backticks. This part is NOT in character.
+2. explanation: what went wrong, said to a friend in their first week of coding. One short sentence, two at most. Use one everyday analogy. Name the actual thing in backticks. This part is NOT a roast: plain and clear.
    Plain words only. Never use: identifier, variable, scope, declare, declaration, token, parse, syntax, type, string, boolean, property, optional, argument, parameter, undefined, null, compile, runtime, expression, chaining. Say "text" instead of string, "number" for numbers, "true/false value" for booleans, "part" or "field" instead of property, "might be missing" instead of optional or undefined.
    Good: "You used \`userName\` but never created it. It's like asking someone to pass you a box that nobody put on the table."
    Bad: "The identifier userName is not declared in the current scope."
 
-3. fix: the steps that fix THIS error, each a single short sentence. Usually one step is enough; add a second only if it is a real alternative or a second required change. Name the exact thing to change and the line it's on, and show the corrected code in backticks. NOT in character.
+3. fix: the steps that fix THIS error, each a single short sentence. Usually one step is enough; add a second only if it is a real alternative or a second required change. Name the exact thing to change and the line it's on, and show the corrected code in backticks. NOT a roast.
    Only fix what the error message describes. If the code to change is outside the snippet, point to it by name (for example "where \`settings\` is created, above") and never guess its line number or its current value; only quote values that appear in the snippet or the error message. Keep any code you show short (one small expression, not a whole rewritten statement). No filler steps like "save and run again".
 
 Also return line: the line number the user should jump to (usually the error line).
 
 Read the numbered code snippet carefully: the real cause is sometimes on the line before the one reported. Never invent code that isn't in the snippet.`;
 
-function userPrompt(error: BuddyError, personality: RealPersonality, legendary: boolean): string {
-  const p = PERSONALITIES[personality];
+/** A random dark theme per call, so the same error doesn't get the same joke every time. */
+const DARK_ANGLES = [
+  'a funeral', 'an obituary', 'an autopsy', 'a haunting', 'a graveyard', 'famous last words', 'a coroner\'s report',
+  'reading the will', 'extinction', 'a crime scene', 'the afterlife', 'a eulogy', 'life support', 'a tombstone',
+];
+
+function userPrompt(error: BuddyError, legendary: boolean): string {
+  const angle = DARK_ANGLES[Math.floor(Math.random() * DARK_ANGLES.length)];
   const reactionRule = legendary
-    ? `THIS IS A LEGENDARY ERROR. Make the reaction wildly, theatrically over the top: exactly 3 or 4 dramatic sentences (never more), the most dramatic thing this character has ever said, while still mentioning the actual error. The explanation and fix must stay just as calm, short and clear as usual.`
-    : `The reaction is 1-3 sentences.`;
+    ? `THIS IS A LEGENDARY ERROR. Make the reaction your darkest, most savage roast yet, 15 words at most, still about the actual error. The explanation and fix must stay just as calm, short and clear as usual.`
+    : `The reaction is 3 to 8 words. Fewer is better.`;
 
-  return `Character: ${p.name} ${p.emoji}
-Voice: ${p.voice}
-Example lines in this voice:
-- ${p.examples[0]}
-- ${p.examples[1]}
-
-${reactionRule}
+  return `${reactionRule}
+Theme for this roast: ${angle}.
 
 Language: ${error.language}
 File: ${error.fileName}
@@ -61,6 +65,10 @@ ${error.message}
 
 Code around the error (each line starts with its line number):
 ${error.snippet}`;
+}
+
+function debug(msg: string) {
+  if (process.env.ERRORBUDDY_DEBUG) console.error(`[ErrorBuddy] ${msg} (using fallback)`);
 }
 
 /** Checks the model's JSON and turns it into a BuddyResponse, or returns null if anything is off. */
@@ -98,12 +106,17 @@ export function createExplainer(apiKey?: string): Explainer {
       // Low effort keeps the answer fast: the model can skip thinking entirely on easy errors.
       output_config: { effort: 'low', format: { type: 'json_schema', schema: RESPONSE_SCHEMA } },
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userPrompt(error, personality, legendary) }],
+      messages: [{ role: 'user', content: userPrompt(error, legendary) }],
     });
     // Refusals and truncated answers fall back rather than showing half a response.
-    if (message.stop_reason !== 'end_turn') return null;
+    if (message.stop_reason !== 'end_turn') {
+      debug(`stop_reason ${message.stop_reason}${message.stop_details ? ` ${JSON.stringify(message.stop_details)}` : ''}`);
+      return null;
+    }
     const text = message.content.map((b) => (b.type === 'text' ? b.text : '')).join('');
-    return toResponse(text, error, personality, legendary);
+    const response = toResponse(text, error, personality, legendary);
+    if (!response) debug(`unusable answer: ${text.slice(0, 200)}`);
+    return response;
   }
 
   return {
@@ -111,11 +124,11 @@ export function createExplainer(apiKey?: string): Explainer {
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
         // Hard deadline on top of the SDK timeout, so the panel never waits more than 8 seconds.
-        const deadline = new Promise<null>((resolve) => (timer = setTimeout(() => resolve(null), TIMEOUT_MS)));
+        const deadline = new Promise<null>((resolve) => (timer = setTimeout(() => { debug(`no answer within ${TIMEOUT_MS} ms`); resolve(null); }, TIMEOUT_MS)));
         const result = await Promise.race([askClaude(error, personality, legendary), deadline]);
         if (result) return result;
       } catch (err) {
-        if (process.env.ERRORBUDDY_DEBUG) console.error('[ErrorBuddy] Claude call failed, using fallback:', err);
+        debug(`Claude call failed: ${err}`);
       } finally {
         clearTimeout(timer);
       }
