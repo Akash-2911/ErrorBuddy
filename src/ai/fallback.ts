@@ -21,7 +21,8 @@ interface ErrorCategory {
   short: Template;
   explanation: Template;
   fix: (c: ErrorContext) => string[];
-  reactions: Record<RealPersonality, Template[]>;
+  /** Dark-humour roasts, a few words each. */
+  roasts: Template[];
 }
 
 /** First thing in quotes in the message: 'x', "x" or `x`. */
@@ -62,28 +63,11 @@ const CATEGORIES: ErrorCategory[] = [
         : `Check the spelling of ${code(c.subject, 'the name')} on line ${c.line}: it must match exactly where you created it (capital letters count).`,
       `If you never created it, add a line above like \`const ${c.subject || 'myThing'} = ...;\` before you use it.`,
     ],
-    reactions: {
-      pirate: [
-        (c) => `Arr, matey! Ye be callin' for ${code(c.subject, 'a sailor')}, but no such sailor be aboard this ship!`,
-        (c) => `Blimey! I searched the whole hold for ${code(c.subject, 'it')} on line ${c.line} and found naught but barnacles!`,
-      ],
-      sportscaster: [
-        (c) => `OH NO! The pass goes to ${code(c.subject, 'a player')} on line ${c.line}, but THERE'S NOBODY THERE, FOLKS!`,
-        (c) => `${code(c.subject, 'That player', )} isn't even on the roster! The ref is NOT happy!`,
-      ],
-      parent: [
-        (c) => `*sigh* I'm not mad that ${code(c.subject, 'it')} doesn't exist. I'm just... disappointed. We talk about introducing our friends first.`,
-        (c) => `You're asking for ${code(c.subject, 'something')} like it's always been here. Honey, you never even made it.`,
-      ],
-      shakespeare: [
-        (c) => `Alas, poor ${code(c.subject, 'friend')}! I called upon thee on line ${c.line}, yet thou wert never born!`,
-        (c) => `Who is this ${code(c.subject, 'stranger')} of whom thou speak'st? No such soul doth dwell within this file!`,
-      ],
-      narrator: [
-        (c) => `Here, in the wild, we observe a rare creature: ${code(c.subject, 'a name')}. It does not exist... and yet it is called upon.`,
-        (c) => `The developer reaches for ${code(c.subject, 'something')} on line ${c.line}. But the habitat is empty. Nothing lives here yet.`,
-      ],
-    },
+    roasts: [
+      (c) => `${code(c.subject, 'It')} was never born. Lucky.`,
+      (c) => `Calling ${code(c.subject, 'the dead')}. Nobody answers.`,
+      () => `Ghost name. Ghost career.`,
+    ],
   },
   {
     id: 'not-a-function',
@@ -98,13 +82,10 @@ const CATEGORIES: ErrorCategory[] = [
       `On line ${c.line}, check what ${code(c.subject, 'this thing')} actually holds: if it's just a value, remove the \`()\` after it.`,
       `If you meant to call a function, check you spelled its name right and that it's really a function.`,
     ],
-    reactions: {
-      pirate: [(c) => `Arr! Ye be orderin' ${code(c.subject, 'that')} to swab the deck, but it be a barrel, not a deckhand!`],
-      sportscaster: [(c) => `They're calling a play with ${code(c.subject, 'that')}, but it's NOT A PLAY, it's the WATER BOTTLE!`],
-      parent: [(c) => `You're telling ${code(c.subject, 'that')} to do something. Sweetie, it can't do anything. It's like asking the couch to make dinner.`],
-      shakespeare: [(c) => `Thou commandest ${code(c.subject, 'it')} to act, yet it hath no deeds within it! A player with no lines!`],
-      narrator: [(c) => `The developer attempts to summon ${code(c.subject, 'it')} into action. It simply sits there, as values do.`],
-    },
+    roasts: [
+      (c) => `Calling ${code(c.subject, 'a corpse')}. It won't get up.`,
+      () => `It's a value, not a séance.`,
+    ],
   },
   {
     id: 'nothing-there',
@@ -118,13 +99,10 @@ const CATEGORIES: ErrorCategory[] = [
       `On line ${c.line}, make sure ${code(c.subject, 'the value')} actually has something in it before you use it.`,
       `Or guard it: write \`?.\` instead of \`.\` (for example \`thing?.name\`) so it safely gives back nothing instead of crashing.`,
     ],
-    reactions: {
-      pirate: [(c) => `Arr, ye opened the treasure chest at line ${c.line} and it be EMPTY, matey! Not even a doubloon!`],
-      sportscaster: [(c) => `He reaches for the ball on line ${c.line}... and THERE'S NO BALL! What a shocker, folks!`],
-      parent: [(c) => `You reached into an empty cookie jar on line ${c.line}. I didn't eat them. I'm just... saying it might be empty.`],
-      shakespeare: [(c) => `To be, or not to be? On line ${c.line}, thy value chose... not to be.`],
-      narrator: [(c) => `The developer reaches into the burrow on line ${c.line}. It is, regrettably, unoccupied.`],
-    },
+    roasts: [
+      () => `Empty coffin. Like your head.`,
+      (c) => `${code(c.subject, 'It')} might be empty. So might your future.`,
+    ],
   },
   {
     id: 'no-such-property',
@@ -138,13 +116,10 @@ const CATEGORIES: ErrorCategory[] = [
       `On line ${c.line}, check the spelling of ${code(c.subject, 'the property name')} (capital letters count).`,
       `If it really should be there, add it where the object is created.`,
     ],
-    reactions: {
-      pirate: [(c) => `Arr! Ye be lookin' for ${code(c.subject, 'that')} on this ship, but she never had one!`],
-      sportscaster: [(c) => `He's going for ${code(c.subject, 'the move')}, but that move ISN'T IN THE PLAYBOOK!`],
-      parent: [(c) => `${code(c.subject, 'That')}? On this? You've been looking for it all day, and it was never there, sweetheart.`],
-      shakespeare: [(c) => `Thou seekest ${code(c.subject, 'a thing')} where no such thing was ever writ!`],
-      narrator: [(c) => `The creature searches for its ${code(c.subject, 'missing part')}. Evolution, it seems, never gave it one.`],
-    },
+    roasts: [
+      (c) => `${code(c.subject, 'That')} doesn't exist. Neither does your talent.`,
+      () => `Digging for parts that were never buried.`,
+    ],
   },
   {
     id: 'missing-token',
@@ -152,23 +127,27 @@ const CATEGORIES: ErrorCategory[] = [
     matches: (e) => e.code === '1005' || /^'[^']+' expected/i.test(e.message),
     subject: (e) => quoted(e.message),
     short: (c) => `the missing ${code(c.subject, 'symbol')}`,
+    // A "',' expected" usually means a list or call was never closed, not that a comma is really missing.
     explanation: (c) =>
-      `The computer was reading your code and expected a ${code(c.subject, 'symbol')} here, but didn't find one. ` +
-      `It's like a sentence that ends without its full stop, so the reader gets lost.`,
-    fix: (c) => [
-      `Look at line ${c.line} (and the line just before it) and add the missing ${code(c.subject, 'symbol')}.`,
-      `Every \`(\`, \`{\` and \`[\` needs a matching \`)\`, \`}\` or \`]\`: count them to find the lonely one.`,
+      c.subject === ','
+        ? `The computer is still inside a list or a call here, so it expected another item or the closing bracket. It's like a sentence that never gets its full stop, so the reader keeps waiting.`
+        : `The computer was reading your code and expected a ${code(c.subject, 'symbol')} here, but didn't find one. ` +
+          `It's like a sentence that ends without its full stop, so the reader gets lost.`,
+    fix: (c) =>
+      c.subject === ','
+        ? [
+            `On line ${c.line}, check for a \`[\` or \`(\` that never got its closing \`]\` or \`)\`, and add it.`,
+            `If two values are just sitting side by side, join them with an operator like \`+\` or separate them with a comma.`,
+          ]
+        : [
+            `Look at line ${c.line} (and the line just before it) and add the missing ${code(c.subject, 'symbol')}.`,
+            `Every \`(\`, \`{\` and \`[\` needs a matching \`)\`, \`}\` or \`]\`: count them to find the lonely one.`,
+          ],
+    roasts: [
+      () => `Died mid-sentence. Fitting.`,
+      () => `Left it open, like your grave.`,
+      (c) => `Line ${c.line}, unfinished. Like you.`,
     ],
-    reactions: {
-      pirate: [
-        (c) => `Arr! A ${code(c.subject, 'piece')} went overboard near line ${c.line}! Man the lifeboats!`,
-        (c) => `Shiver me timbers, ye forgot a ${code(c.subject, 'piece')}! Our hull be leakin' code into the sea!`,
-      ],
-      sportscaster: [(c) => `AND THEY FORGOT THE ${c.subject ? `\`${c.subject}\`` : 'FINISH'}! The play just stops dead on line ${c.line}!`],
-      parent: [(c) => `You left the ${code(c.subject, 'lid')} off. Again. I'm not angry, I just keep finding things open around here.`],
-      shakespeare: [(c) => `A ${code(c.subject, 'mark')}, a ${code(c.subject, 'mark')}! My kingdom for a ${code(c.subject, 'mark')}!`],
-      narrator: [(c) => `Near line ${c.line}, a single ${code(c.subject, 'symbol')} has gone missing. The ecosystem cannot function without it.`],
-    },
   },
   {
     id: 'unexpected-token',
@@ -184,13 +163,10 @@ const CATEGORIES: ErrorCategory[] = [
       `Look closely at line ${c.line} for an extra or missing bracket, comma or quote, and remove or add it.`,
       `If the line looks fine, check the line just above it: the real mistake is often one line earlier.`,
     ],
-    reactions: {
-      pirate: [(c) => `Arr! A stowaway on line ${c.line}! Somethin' be where it don't belong!`],
-      sportscaster: [(c) => `WHAT IS THAT ON THE FIELD? Something has wandered onto line ${c.line} and play is STOPPED!`],
-      parent: [(c) => `What is THIS doing on line ${c.line}? I don't know where you picked that up, but it doesn't go there.`],
-      shakespeare: [(c) => `What villain hath crept upon line ${c.line}? Begone, thou unexpected knave!`],
-      narrator: [(c) => `An intruder has entered line ${c.line}. The other symbols regard it with deep suspicion.`],
-    },
+    roasts: [
+      (c) => `Line ${c.line} is a crime scene.`,
+      () => `Even the compiler wants a lawyer.`,
+    ],
   },
   {
     id: 'unused',
@@ -204,13 +180,10 @@ const CATEGORIES: ErrorCategory[] = [
       `If you don't need ${code(c.subject, 'it')}, delete line ${c.line}.`,
       `If you do need it, use it somewhere below where it's created.`,
     ],
-    reactions: {
-      pirate: [(c) => `Arr, ye hired ${code(c.subject, 'a deckhand')} and never gave 'em a single job!`],
-      sportscaster: [(c) => `${code(c.subject, 'This player')} has been on the bench ALL GAME! Put 'em in, coach!`],
-      parent: [(c) => `You just HAD to have ${code(c.subject, 'it')}, and now it's sitting there unused. Like the treadmill.`],
-      shakespeare: [(c) => `${code(c.subject, 'This one')} was born, yet given no part to play. A tragedy most quiet.`],
-      narrator: [(c) => `${code(c.subject, 'This creature')} was brought into the world... and then entirely ignored.`],
-    },
+    roasts: [
+      (c) => `${code(c.subject, 'It')} lived alone. Died alone.`,
+      () => `Born, ignored, forgotten. Relatable.`,
+    ],
   },
   {
     id: 'type-mismatch',
@@ -224,13 +197,10 @@ const CATEGORIES: ErrorCategory[] = [
       `On line ${c.line}, check what kind of value is expected (number, text, list...) and pass that kind instead.`,
       `If you need to switch kinds, convert it, for example \`Number(x)\` to turn text into a number or \`String(x)\` for the reverse.`,
     ],
-    reactions: {
-      pirate: [(c) => `Arr! Ye tried to load rum into the cannon on line ${c.line}! Wrong cargo, matey!`],
-      sportscaster: [(c) => `He's trying to shoot a BASKETBALL into the HOCKEY NET on line ${c.line}! Wrong sport!`],
-      parent: [(c) => `That's not what I asked for on line ${c.line}. I said a number. You brought me... this.`],
-      shakespeare: [(c) => `Thou offerest a rose where a sword was sought! On line ${c.line}, such mismatch doth wound me!`],
-      narrator: [(c) => `On line ${c.line}, a square peg attempts to enter a round hole. It does not go well.`],
-    },
+    roasts: [
+      () => `Wrong body in the coffin.`,
+      () => `Square peg. Round grave.`,
+    ],
   },
   {
     id: 'const-reassign',
@@ -244,13 +214,10 @@ const CATEGORIES: ErrorCategory[] = [
       `Find where ${code(c.subject, 'it')} is created and change \`const\` to \`let\` so it's allowed to change.`,
       `Or, if it really shouldn't change, remove the line that tries to change it (line ${c.line}).`,
     ],
-    reactions: {
-      pirate: [(c) => `Arr! ${code(c.subject, 'That')} be nailed to the mast, matey! Ye can't move it now!`],
-      sportscaster: [(c) => `He's trying to change ${code(c.subject, 'the final score')} AFTER THE GAME! That's not allowed!`],
-      parent: [(c) => `We agreed ${code(c.subject, 'that')} wouldn't change. We shook on it. And now look.`],
-      shakespeare: [(c) => `${code(c.subject, 'It')} swore a vow most constant, and thou wouldst make it break it!`],
-      narrator: [(c) => `${code(c.subject, 'This one')} is set in stone, like a fossil. And yet, the developer tries to move it.`],
-    },
+    roasts: [
+      (c) => `${code(c.subject, 'It')} is set in stone. Like your tombstone.`,
+      () => `Some things never change. Your bugs, mostly.`,
+    ],
   },
   {
     id: 'unterminated-string',
@@ -261,13 +228,10 @@ const CATEGORIES: ErrorCategory[] = [
       `You started some text with a quote mark but never closed it, so the computer thinks the rest of the file is part of the text. ` +
       `It's like opening a bracket in a sentence and never closing it.`,
     fix: (c) => [`Add the matching closing quote (\`'\`, \`"\` or \`\\\`\`) at the end of the text on line ${c.line}.`],
-    reactions: {
-      pirate: [(c) => `Arr! Yer message in a bottle on line ${c.line} never got its cork! It be spillin' everywhere!`],
-      sportscaster: [(c) => `The text on line ${c.line} just KEEPS GOING! Somebody stop it! It's running out of the stadium!`],
-      parent: [(c) => `You started a sentence on line ${c.line} and just... walked away. Like with the dishes.`],
-      shakespeare: [(c) => `Thy words on line ${c.line} run on and on, with no end in sight! A soliloquy unending!`],
-      narrator: [(c) => `On line ${c.line}, a string has escaped its enclosure. It now roams the file, unchecked.`],
-    },
+    roasts: [
+      () => `Your text outlived your hopes.`,
+      () => `No closing quote. No closure.`,
+    ],
   },
   {
     id: 'redeclared',
@@ -281,13 +245,10 @@ const CATEGORIES: ErrorCategory[] = [
       `Delete the second \`const\`/\`let\` in front of ${code(c.subject, 'the name')} on line ${c.line} if you just meant to change its value.`,
       `If they're meant to be two different things, give one of them a new name.`,
     ],
-    reactions: {
-      pirate: [(c) => `Arr! Two sailors both named ${code(c.subject, 'the same')}? This crew be confusin' me!`],
-      sportscaster: [(c) => `TWO players wearing the ${code(c.subject, 'same')} jersey! The ref can't tell them apart!`],
-      parent: [(c) => `You already have a ${code(c.subject, 'one of those')}. Why do you need another? Do you know how much these cost?`],
-      shakespeare: [(c) => `Two ${code(c.subject, 'souls')}, both alike in name! A comedy of errors, truly!`],
-      narrator: [(c) => `Two creatures named ${code(c.subject, 'the same')} now compete for one territory. Only one can survive.`],
-    },
+    roasts: [
+      (c) => `Two ${code(c.subject, 'of them')}. One grave.`,
+      () => `Same name, double funeral.`,
+    ],
   },
 ];
 
@@ -303,53 +264,20 @@ const GENERIC: ErrorCategory = {
     `Read line ${c.line} slowly and look for typos, missing brackets or missing quotes.`,
     `Hover over the red squiggle to see the exact message and compare it with the line.`,
   ],
-  reactions: {
-    pirate: [(c) => `Arr! There be trouble brewin' on line ${c.line}, matey! All hands on deck!`],
-    sportscaster: [(c) => `FLAG ON THE PLAY! Line ${c.line}! Let's go to the replay, folks!`],
-    parent: [(c) => `*sigh* Line ${c.line}. I'm not going to say anything. I'm just going to stand here. Looking at it.`],
-    shakespeare: [(c) => `Something is rotten in the state of line ${c.line}!`],
-    narrator: [(c) => `On line ${c.line}, something stirs in the undergrowth. The developer has not yet noticed.`],
-  },
+  roasts: [
+    (c) => `Line ${c.line}. Time of death.`,
+    () => `Rest in pieces.`,
+  ],
 };
 
-const LEGENDARY_INTRO: Record<RealPersonality, string> = {
-  pirate: 'BY THE SEVEN SEAS AND ALL THE KRAKEN WITHIN! In forty years of sailin\' I have NEVER seen a beast like this!',
-  sportscaster: 'LADIES AND GENTLEMEN, STOP WHAT YOU\'RE DOING! THIS IS THE ERROR OF THE CENTURY!',
-  parent: 'I need to sit down. No, really. Get me a chair. In all my years of raising you, I never imagined THIS.',
-  shakespeare: 'O heavens! O earth! O cruel and mighty fates! What monstrous error doth rise before mine eyes?!',
-  narrator: 'Hold your breath. What we are about to witness has been seen by only a handful of humans in history.',
-};
+/** Legendary errors get a darker opener in front of the normal roast. */
+const LEGENDARY_OPENERS = ['Call the coroner.', 'Dig two graves.', 'Code is dead. You\'re next.'];
 
-const LEGENDARY_OUTRO: Record<RealPersonality, string> = {
-  pirate: 'Sharpen yer cutlass, matey, for legends will be sung of the day we slay this monster!',
-  sportscaster: 'THE CROWD IS ON ITS FEET! This is the moment champions are made, and YOU are in the game!',
-  parent: 'But you know what? I raised a fighter. Go get it, sweetheart. I\'ll be right here, being proud.',
-  shakespeare: 'Yet fear not, brave coder, for every tragedy may turn to triumph in the final act!',
-  narrator: 'And yet the developer does not flee. Against all odds, our hero prepares to face the beast.',
-};
-
-const CELEBRATIONS: Record<RealPersonality, ((what: string) => string)[]> = {
-  pirate: [
-    (w) => `Arr! ${cap(w)} has been banished to Davy Jones' locker!`,
-    (w) => `Yo ho ho! We made ${w} walk the plank, matey!`,
-  ],
-  sportscaster: [
-    (w) => `AND THAT'S THE GAME! ${cap(w)} is OUT and the crowd goes WILD!`,
-    (w) => `WHAT A COMEBACK! ${cap(w)} never stood a chance, folks!`,
-  ],
-  parent: [
-    (w) => `You fixed ${w} all by yourself? I'm putting this on the fridge.`,
-    (w) => `${cap(w)} is gone and I am SO proud of you. Wait till I tell your aunt.`,
-  ],
-  shakespeare: [
-    (w) => `Huzzah! ${cap(w)} is vanquished, and all's well that ends well!`,
-    (w) => `${cap(w)} hath exited, pursued by a bear! Bravo, noble coder!`,
-  ],
-  narrator: [
-    (w) => `And with that, ${w} returns to the wild, never to trouble this habitat again.`,
-    (w) => `Remarkable. The developer has overcome ${w}. Nature is healing.`,
-  ],
-};
+const CELEBRATIONS: ((what: string) => string)[] = [
+  (w) => `${cap(w)}: buried. You live. For now.`,
+  (w) => `${cap(w)} is dead. Unlike your bugs, it'll stay dead.`,
+  (w) => `${cap(w)}, rest in peace. You, keep suffering.`,
+];
 
 function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -368,21 +296,21 @@ export function contextFor(error: BuddyError): ErrorContext {
   };
 }
 
-/** One in-character sentence that names what went wrong. Free, instant, never fails. */
-export function celebrationFor(error: BuddyError, personality: RealPersonality): string {
+/** One short line that names what went wrong. Free, instant, never fails. */
+export function celebrationFor(error: BuddyError, _personality: RealPersonality): string {
   const what = categorize(error).short(contextFor(error));
-  return pick(CELEBRATIONS[personality])(what);
+  return pick(CELEBRATIONS)(what);
 }
 
+/** The same roast voice for every personality; `personality` is only passed through because the contract needs it. */
 export function fallbackResponse(error: BuddyError, personality: RealPersonality, legendary: boolean): BuddyResponse {
   const category = categorize(error);
   const ctx = contextFor(error);
-  const base = pick(category.reactions[personality])(ctx);
-  const reaction = legendary ? `${LEGENDARY_INTRO[personality]} ${base} ${LEGENDARY_OUTRO[personality]}` : base;
+  const roast = pick(category.roasts)(ctx);
   return {
     errorId: error.id,
     personality,
-    reaction,
+    reaction: legendary ? `${pick(LEGENDARY_OPENERS)} ${roast}` : roast,
     explanation: category.explanation(ctx),
     fix: category.fix(ctx),
     line: error.line,

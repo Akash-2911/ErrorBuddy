@@ -1,14 +1,12 @@
 /**
- * Runs sample errors through every personality and prints the results.
+ * Runs sample errors through the explainer and prints the results.
  *
  *   npx tsx scripts/try-explainer.ts            offline (fallback) + live Claude if ANTHROPIC_API_KEY is set
  *   npx tsx scripts/try-explainer.ts --offline  fallback only
  *   npx tsx scripts/try-explainer.ts --live     Claude only (needs ANTHROPIC_API_KEY)
- *   npx tsx scripts/try-explainer.ts --only pirate
  */
 import { createExplainer } from '../src/ai/explainer';
 import { createFallbackExplainer } from '../src/ai/fallback';
-import { PERSONALITIES, REAL_PERSONALITIES } from '../src/ai/personalities';
 import type { BuddyError, Explainer, RealPersonality } from '../src/types';
 
 function sample(fileName: string, line: number, column: number, message: string, code: string | undefined, language: string, lines: string[], firstLine: number): BuddyError {
@@ -74,38 +72,32 @@ const SAMPLES: BuddyError[] = [
 ];
 
 const args = process.argv.slice(2);
-const only = args.includes('--only') ? (args[args.indexOf('--only') + 1] as RealPersonality) : undefined;
-const personalities = only ? [only] : REAL_PERSONALITIES;
 const hasKey = Boolean(process.env.ANTHROPIC_API_KEY);
 const runOffline = !args.includes('--live');
 const runLive = !args.includes('--offline') && hasKey;
+// The explainer roasts in one voice whatever the personality, so any value works here.
+const ANY: RealPersonality = 'pirate';
 
 async function run(label: string, explainer: Explainer) {
   console.log(`\n${'='.repeat(70)}\n ${label}\n${'='.repeat(70)}`);
 
   for (const error of SAMPLES) {
     console.log(`\n--- ${error.fileName}:${error.line}  ${error.message.slice(0, 80)}${error.message.length > 80 ? '…' : ''}`);
-    for (const p of personalities) {
-      const started = Date.now();
-      const r = await explainer.explain(error, p, false);
-      const celebration = await explainer.celebrate(error, p);
-      print(p, r.reaction, r.explanation, r.fix, r.line, celebration, Date.now() - started);
-    }
+    const started = Date.now();
+    const r = await explainer.explain(error, ANY, false);
+    print(r.reaction, r.explanation, r.fix, r.line, await explainer.celebrate(error, ANY), Date.now() - started);
   }
 
-  // One legendary run per personality, on the nasty last error.
+  // The nasty last error again, as a legendary one.
   const nasty = SAMPLES[SAMPLES.length - 1];
   console.log(`\n--- ⚡ LEGENDARY: ${nasty.fileName}:${nasty.line}`);
-  for (const p of personalities) {
-    const started = Date.now();
-    const r = await explainer.explain(nasty, p, true);
-    print(p, r.reaction, r.explanation, r.fix, r.line, await explainer.celebrate(nasty, p), Date.now() - started);
-  }
+  const started = Date.now();
+  const r = await explainer.explain(nasty, ANY, true);
+  print(r.reaction, r.explanation, r.fix, r.line, await explainer.celebrate(nasty, ANY), Date.now() - started);
 }
 
-function print(p: RealPersonality, reaction: string, explanation: string, fix: string[], line: number, celebration: string, ms: number) {
-  const { emoji, name } = PERSONALITIES[p];
-  console.log(`\n  ${emoji} ${name}  (${ms} ms)`);
+function print(reaction: string, explanation: string, fix: string[], line: number, celebration: string, ms: number) {
+  console.log(`  (${ms} ms)`);
   console.log(`    Reaction:    ${reaction}`);
   console.log(`    What:        ${explanation}`);
   fix.forEach((step, i) => console.log(`    Fix ${i + 1}:       ${step}`));

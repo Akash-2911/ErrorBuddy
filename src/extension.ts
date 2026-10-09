@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import { ErrorWatcher } from './errorWatcher';
 import { createExplainer } from './ai/explainer';
+import { ACHIEVEMENTS } from './game/achievements';
 import { createGameEngine } from './game/engine';
 import { ErrorHighlighter } from './highlight';
 import { BuddyPanel } from './panel';
+import { getUsername, setUsername } from './profile';
 import { BuddyStatusBar } from './statusBar';
 import {
   Achievement,
@@ -65,9 +67,9 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   // The line highlight and status bar follow whatever error the panel is talking about.
-  const markShown = (error: BuddyError, personality: RealPersonality, legendary: boolean) => {
-    highlighter.show(error, personality, legendary);
-    statusBar.showError(error, personality);
+  const markShown = (error: BuddyError, legendary: boolean) => {
+    highlighter.show(error, legendary);
+    statusBar.showError(error);
   };
   const clearMarks = () => {
     highlighter.clear();
@@ -86,6 +88,8 @@ export function activate(context: vscode.ExtensionContext): void {
       output.appendLine(`[error] revealPanel: ${err}`);
     }
   };
+  const postProfile = () =>
+    panel.post({ type: 'profile', username: getUsername(), achievements: Object.values(ACHIEVEMENTS) });
 
   const handleNewError = async (error: BuddyError, ticket: number) => {
     if (ticket !== latest) {
@@ -95,7 +99,7 @@ export function activate(context: vscode.ExtensionContext): void {
     shown = { errorId: error.id, personality: result.personality, legendary: result.legendary };
     await revealPanel();
     panel.post({ type: 'thinking', error, personality: result.personality });
-    markShown(error, result.personality, result.legendary);
+    markShown(error, result.legendary);
 
     const cacheKey = `${error.message}::${result.personality}::${result.legendary}`;
     let response = cache.get(cacheKey);
@@ -163,6 +167,7 @@ export function activate(context: vscode.ExtensionContext): void {
     switch (msg.type) {
       case 'ready':
         postState();
+        postProfile();
         break;
       case 'setPersonality':
         enqueue('setPersonality', async () => {
@@ -172,6 +177,11 @@ export function activate(context: vscode.ExtensionContext): void {
         break;
       case 'jumpToLine':
         jumpToLine(msg.file, msg.line).catch((err) => output.appendLine(`[error] jumpToLine: ${err}`));
+        break;
+      case 'setUsername':
+        setUsername(msg.username)
+          .then(postProfile)
+          .catch((err) => output.appendLine(`[error] setUsername: ${err}`));
         break;
     }
   };
@@ -202,6 +212,9 @@ export function activate(context: vscode.ExtensionContext): void {
       if (e.affectsConfiguration('errorBuddy.apiKey')) {
         explainer = makeExplainer();
         cache.clear();
+      }
+      if (e.affectsConfiguration('errorBuddy.username')) {
+        postProfile();
       }
     }),
     vscode.commands.registerCommand('errorBuddy.resetStats', () =>

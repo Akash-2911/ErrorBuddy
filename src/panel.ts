@@ -103,7 +103,7 @@ export class BuddyPanel implements vscode.WebviewViewProvider, PanelController {
     return new TextDecoder('utf-8')
       .decode(bytes)
       .replace('<!--CSP-->', `<meta http-equiv="Content-Security-Policy" content="${csp}">`)
-      .replace(/(href|src)="(panel\.css|panel\.js|confetti\.js)"/g, (_match, attr: string, file: string) => {
+      .replace(/(href|src)="(panel\.css|panel\.js|confetti\.js|pixels\.js)"/g, (_match, attr: string, file: string) => {
         const uri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, file));
         return `${attr}="${uri.toString()}"`;
       })

@@ -96,13 +96,15 @@ export type ToPanel =
   | { type: 'fixed'; error: BuddyError; celebration: string; streak: number }
   | { type: 'achievement'; achievement: Achievement }
   | { type: 'state'; state: GameState }
+  | { type: 'profile'; username: string; achievements: Achievement[] }  // achievements = all of them; unlocked ones come in 'state'
   | { type: 'idle' };
 
 /** Messages from the panel to the extension. Sent by Ritesh, handled by Akash. */
 export type FromPanel =
   | { type: 'ready' }
   | { type: 'setPersonality'; personality: Personality }
-  | { type: 'jumpToLine'; file: string; line: number };
+  | { type: 'jumpToLine'; file: string; line: number }
+  | { type: 'setUsername'; username: string };   // '' goes back to the computer's login name
 
 /** Built by Ritesh. */
 export interface PanelController {

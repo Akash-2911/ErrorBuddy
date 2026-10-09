@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
-import { PERSONALITIES } from './ai/personalities';
-import { BuddyError, RealPersonality } from './types';
+import { BuddyError } from './types';
+
+const MASCOT = '👾';
 
 /** "🔥 3 ErrorBuddy" in the bottom bar; shows the current error's line while one is on screen. Click opens the panel. */
 export class BuddyStatusBar implements vscode.Disposable {
   private readonly item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   private streak = 0;
-  private error: { line: number; personality: RealPersonality } | undefined;
+  private errorLine: number | undefined;
 
   constructor() {
     this.item.command = 'errorBuddy.panel.focus';
@@ -19,20 +20,19 @@ export class BuddyStatusBar implements vscode.Disposable {
     this.render();
   }
 
-  showError(error: BuddyError, personality: RealPersonality): void {
-    this.error = { line: error.line, personality };
+  showError(error: BuddyError): void {
+    this.errorLine = error.line;
     this.render();
   }
 
   clearError(): void {
-    this.error = undefined;
+    this.errorLine = undefined;
     this.render();
   }
 
   private render(): void {
-    if (this.error) {
-      const emoji = PERSONALITIES[this.error.personality]?.emoji ?? '🤖';
-      this.item.text = `${emoji} Error on line ${this.error.line} · 🔥 ${this.streak}`;
+    if (this.errorLine !== undefined) {
+      this.item.text = `${MASCOT} Error on line ${this.errorLine} · 🔥 ${this.streak}`;
       this.item.tooltip = 'ErrorBuddy has an explanation for you. Click to open.';
     } else {
       this.item.text = `🔥 ${this.streak} ErrorBuddy`;

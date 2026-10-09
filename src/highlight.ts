@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import { PERSONALITIES } from './ai/personalities';
-import { BuddyError, RealPersonality } from './types';
+import { BuddyError } from './types';
+
+const MASCOT = '👾';
 
 /** Softly highlights the line ErrorBuddy is talking about, in every editor showing that file. */
 export class ErrorHighlighter implements vscode.Disposable {
@@ -17,11 +18,11 @@ export class ErrorHighlighter implements vscode.Disposable {
     overviewRulerColor: 'rgba(255, 200, 0, 1)',
     overviewRulerLane: vscode.OverviewRulerLane.Full,
   });
-  private current: { error: BuddyError; personality: RealPersonality; legendary: boolean } | undefined;
+  private current: { error: BuddyError; legendary: boolean } | undefined;
   private readonly subscription = vscode.window.onDidChangeVisibleTextEditors(() => this.apply());
 
-  show(error: BuddyError, personality: RealPersonality, legendary: boolean): void {
-    this.current = { error, personality, legendary };
+  show(error: BuddyError, legendary: boolean): void {
+    this.current = { error, legendary };
     this.apply();
   }
 
@@ -39,16 +40,15 @@ export class ErrorHighlighter implements vscode.Disposable {
   }
 
   private decorationFor(
-    target: { error: BuddyError; personality: RealPersonality; legendary: boolean },
+    target: { error: BuddyError; legendary: boolean },
     editor: vscode.TextEditor,
   ): vscode.DecorationOptions {
     const line = Math.min(target.error.line - 1, editor.document.lineCount - 1);
-    const emoji = PERSONALITIES[target.personality]?.emoji ?? '🤖';
     return {
       range: new vscode.Range(line, 0, line, 0),
       renderOptions: {
         after: {
-          contentText: target.legendary ? `   ${emoji} ⚡ LEGENDARY ⚡` : `   ${emoji} ErrorBuddy is on it`,
+          contentText: target.legendary ? `   ${MASCOT} ⚡ LEGENDARY ⚡` : `   ${MASCOT} ErrorBuddy is on it`,
           color: new vscode.ThemeColor('editorCodeLens.foreground'),
           fontStyle: 'italic',
         },
