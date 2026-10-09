@@ -15,38 +15,56 @@
   <header class="header">
     <label class="sr-only" for="personality">Personality</label>
     <select id="personality" title="Pick who reacts to your errors">
-      <option value="random">🎲 Random</option>
-      <option value="pirate">🏴‍☠️ Pirate</option>
-      <option value="sportscaster">🎙️ Sportscaster</option>
-      <option value="parent">😔 Disappointed Parent</option>
-      <option value="shakespeare">🎭 Shakespeare</option>
-      <option value="narrator">🦎 Nature Narrator</option>
+      <option value="random">Random</option>
+      <option value="pirate">Pirate</option>
+      <option value="sportscaster">Sportscaster</option>
+      <option value="parent">Disappointed Parent</option>
+      <option value="shakespeare">Shakespeare</option>
+      <option value="narrator">Nature Narrator</option>
     </select>
-    <div id="streak" class="streak" title="Fixes in a row">🔥 <span id="streakCount">0</span> in a row</div>
-    <button id="profileBtn" class="icon-btn" type="button" title="Your profile" aria-label="Your profile" aria-expanded="false">👤</button>
+    <div id="streak" class="streak" title="Fixes in a row">
+      <span class="icon-slot" data-icon="flame"></span><span id="streakCount">0</span> in a row
+    </div>
+    <button id="profileBtn" class="icon-btn" type="button" title="Your profile" aria-label="Your profile" aria-expanded="false"><span class="icon-slot" data-icon="person"></span></button>
   </header>
 
   <main id="scene" class="scene is-idle">
-    <div id="legendaryBanner" class="legendary-banner" hidden>⚡ LEGENDARY ERROR ⚡</div>
+    <div id="legendaryBanner" class="legendary-banner" hidden>
+      <span class="icon-slot" data-icon="bolt"></span>
+      <span>LEGENDARY ERROR</span>
+      <span class="icon-slot" data-icon="bolt"></span>
+    </div>
 
     <section class="character">
-      <div id="avatar" class="avatar" aria-hidden="true">😌</div>
-      <div class="bubble" aria-live="polite">
-        <p id="bubbleText" class="bubble-text">No errors. Suspiciously quiet…</p>
-        <div id="typing" class="typing" hidden aria-label="Thinking">
-          <span></span><span></span><span></span>
+      <div id="avatar" class="avatar" aria-hidden="true"></div>
+      <div class="speech">
+        <div id="errorMeta" class="error-meta" hidden></div>
+        <div class="bubble" aria-live="polite">
+          <p id="bubbleText" class="bubble-text">No errors. Suspiciously quiet…</p>
+          <p id="idleHint" class="hint">Keep coding. I'll speak up the moment something breaks.</p>
+          <div id="typing" class="typing" hidden aria-label="Thinking">
+            <span></span><span></span><span></span>
+          </div>
         </div>
       </div>
-      <div id="errorMeta" class="error-meta" hidden></div>
     </section>
 
-    <section id="explainBox" class="box" hidden>
-      <h2>🤔 What happened</h2>
+    <div id="skeleton" class="skeleton" hidden aria-hidden="true">
+      <span class="sk sk-title"></span>
+      <span class="sk"></span>
+      <span class="sk sk-short"></span>
+      <span class="sk sk-title sk-gap"></span>
+      <span class="sk"></span>
+      <span class="sk sk-button"></span>
+    </div>
+
+    <section id="explainBox" class="block" hidden>
+      <h2>What happened</h2>
       <p id="explanation"></p>
     </section>
 
-    <section id="fixBox" class="box" hidden>
-      <h2>🔧 How to fix it</h2>
+    <section id="fixBox" class="block" hidden>
+      <h2>How to fix it</h2>
       <ol id="fixList"></ol>
       <button id="jumpBtn" type="button">Go to line</button>
     </section>
@@ -59,7 +77,7 @@
       <div id="profileInitial" class="profile-avatar" aria-hidden="true">?</div>
       <div id="nameView" class="name-view">
         <div id="profileName" class="profile-name"></div>
-        <button id="editName" class="link-btn" type="button">✏️ Edit name</button>
+        <button id="editName" class="link-btn" type="button">Edit name</button>
       </div>
       <form id="nameForm" class="name-form" hidden>
         <label class="sr-only" for="nameInput">Username</label>
@@ -78,17 +96,18 @@
       <div class="stat"><div id="statFixes" class="stat-value">0</div><div class="stat-label">Total fixes</div></div>
     </div>
 
-    <section class="box">
-      <h2>🏆 Achievements <span id="achCount" class="ach-count"></span></h2>
+    <section class="block">
+      <h2>Achievements <span id="achCount" class="ach-count"></span></h2>
       <ul id="achList" class="ach-list"></ul>
     </section>
   </section>
 
   <div id="mockBar" class="mock-bar" hidden>
     <span>Mock mode</span>
-    <button id="mockTheme" type="button">Toggle light / dark</button>
+    <button id="mockTheme" class="quiet" type="button">Toggle light / dark</button>
   </div>
 
+  <script src="pixels.js"></script>
   <script src="confetti.js"></script>
   <script src="panel.js"></script>
 </body>
