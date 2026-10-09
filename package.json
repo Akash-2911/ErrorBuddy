@@ -42,6 +42,11 @@
           "default": "",
           "markdownDescription": "Anthropic API key used for explanations. Falls back to the `ANTHROPIC_API_KEY` environment variable; with neither, ErrorBuddy uses offline canned responses."
         },
+        "errorBuddy.speakRoasts": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Read each roast out loud with your computer's built-in voice. Toggle quickly with **ErrorBuddy: Toggle Spoken Roasts**."
+        },
         "errorBuddy.username": {
           "type": "string",
           "default": "",
@@ -54,6 +59,11 @@
       {
         "command": "errorBuddy.resetStats",
         "title": "Reset Stats",
+        "category": "ErrorBuddy"
+      },
+      {
+        "command": "errorBuddy.toggleSpeech",
+        "title": "Toggle Spoken Roasts",
         "category": "ErrorBuddy"
       },
       {

@@ -6,6 +6,7 @@ import { createGameEngine } from './game/engine';
 import { ErrorHighlighter } from './highlight';
 import { BuddyPanel } from './panel';
 import { getUsername, setUsername } from './profile';
+import { RoastSpeaker } from './speech';
 import { BuddyStatusBar } from './statusBar';
 import {
   Achievement,
@@ -42,6 +43,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const watcher = new ErrorWatcher();
   const highlighter = new ErrorHighlighter();
   const statusBar = new BuddyStatusBar();
+  const speaker = new RoastSpeaker();
   statusBar.setStreak(game.getState().streak);
   const cache = new Map<string, BuddyResponse>();
 
@@ -76,6 +78,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const clearMarks = () => {
     highlighter.clear();
     statusBar.clearError();
+    speaker.stop();
   };
 
   /** Pops the ErrorBuddy panel open, then hands the keyboard straight back to the editor. */
@@ -121,6 +124,9 @@ export function activate(context: vscode.ExtensionContext): void {
       return; // the user moved on while we were thinking
     }
     panel.post({ type: 'response', error, response });
+    if (speakRoasts()) {
+      speaker.speak(response.reaction, response.legendary);
+    }
     postAchievements(result.newAchievements);
     postState();
   };
@@ -194,6 +200,7 @@ export function activate(context: vscode.ExtensionContext): void {
     watcher,
     highlighter,
     statusBar,
+    speaker,
     vscode.window.registerWebviewViewProvider(BuddyPanel.viewId, buddyPanel),
     watcher.onNewError((error) => {
       const ticket = ++latest;
@@ -219,6 +226,14 @@ export function activate(context: vscode.ExtensionContext): void {
         postProfile();
       }
     }),
+    vscode.commands.registerCommand('errorBuddy.toggleSpeech', async () => {
+      const on = !speakRoasts();
+      await vscode.workspace.getConfiguration('errorBuddy').update('speakRoasts', on, vscode.ConfigurationTarget.Global);
+      if (!on) {
+        speaker.stop();
+      }
+      vscode.window.showInformationMessage(on ? 'ErrorBuddy will read roasts out loud. 🔊' : 'ErrorBuddy roasts are muted. 🔇');
+    }),
     vscode.commands.registerCommand('errorBuddy.resetStats', () =>
       enqueue('reset', async () => {
         await game.reset();
@@ -243,6 +258,10 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {}
 
 /** Setting first, then the ANTHROPIC_API_KEY env var. Undefined means offline/fallback mode. */
+function speakRoasts(): boolean {
+  return vscode.workspace.getConfiguration('errorBuddy').get<boolean>('speakRoasts', true);
+}
+
 function getApiKey(): string | undefined {
   const fromSetting = vscode.workspace.getConfiguration('errorBuddy').get<string>('apiKey')?.trim();
   return fromSetting || process.env.ANTHROPIC_API_KEY || undefined;
