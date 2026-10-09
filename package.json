@@ -41,6 +41,12 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Anthropic API key used for explanations. Falls back to the `ANTHROPIC_API_KEY` environment variable; with neither, ErrorBuddy uses offline canned responses."
+        },
+        "errorBuddy.username": {
+          "type": "string",
+          "default": "",
+          "maxLength": 30,
+          "markdownDescription": "Your name on the ErrorBuddy profile page. Leave empty to use your computer's login name. Only ErrorBuddy uses this."
         }
       }
     },
