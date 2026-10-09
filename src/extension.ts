@@ -4,6 +4,7 @@ import { createExplainer } from './ai/explainer';
 import { createGameEngine } from './game/engine';
 import { ErrorHighlighter } from './highlight';
 import { BuddyPanel } from './panel';
+import { BuddyStatusBar } from './statusBar';
 import {
   Achievement,
   BuddyError,
@@ -36,6 +37,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const watcher = new ErrorWatcher();
   const highlighter = new ErrorHighlighter();
+  const statusBar = new BuddyStatusBar();
+  statusBar.setStreak(game.getState().streak);
   const cache = new Map<string, BuddyResponse>();
 
   // What is on screen right now, so a later fix can be celebrated in the same voice.
@@ -55,7 +58,34 @@ export function activate(context: vscode.ExtensionContext): void {
       panel.post({ type: 'achievement', achievement });
     }
   };
-  const postState = () => panel.post({ type: 'state', state: game.getState() });
+  const postState = () => {
+    const state = game.getState();
+    statusBar.setStreak(state.streak);
+    panel.post({ type: 'state', state });
+  };
+
+  // The line highlight and status bar follow whatever error the panel is talking about.
+  const markShown = (error: BuddyError, personality: RealPersonality, legendary: boolean) => {
+    highlighter.show(error, personality, legendary);
+    statusBar.showError(error, personality);
+  };
+  const clearMarks = () => {
+    highlighter.clear();
+    statusBar.clearError();
+  };
+
+  /** Pops the ErrorBuddy panel open, then hands the keyboard straight back to the editor. */
+  const revealPanel = async () => {
+    const editor = vscode.window.activeTextEditor;
+    try {
+      await vscode.commands.executeCommand('errorBuddy.panel.focus');
+      if (editor) {
+        await vscode.window.showTextDocument(editor.document, { viewColumn: editor.viewColumn, preserveFocus: false });
+      }
+    } catch (err) {
+      output.appendLine(`[error] revealPanel: ${err}`);
+    }
+  };
 
   const handleNewError = async (error: BuddyError, ticket: number) => {
     if (ticket !== latest) {
@@ -63,8 +93,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     const result = await game.onErrorShown(error, new Date());
     shown = { errorId: error.id, personality: result.personality, legendary: result.legendary };
+    await revealPanel();
     panel.post({ type: 'thinking', error, personality: result.personality });
-    highlighter.show(error, result.personality, result.legendary);
+    markShown(error, result.personality, result.legendary);
 
     const cacheKey = `${error.message}::${result.personality}::${result.legendary}`;
     let response = cache.get(cacheKey);
@@ -91,7 +122,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const handleFixed = async (error: BuddyError) => {
     const was = shown?.errorId === error.id ? shown : undefined;
     shown = undefined;
-    highlighter.clear();
+    clearMarks();
     const personality = was?.personality ?? 'pirate';
     const [celebration, result] = await Promise.all([
       explainer.celebrate(error, personality).catch(() => `Fixed! "${error.message}" is gone.`),
@@ -112,7 +143,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     if (ticket === latest) {
       shown = undefined;
-      highlighter.clear();
+      clearMarks();
       panel.post({ type: 'idle' });
     }
   };
@@ -150,6 +181,7 @@ export function activate(context: vscode.ExtensionContext): void {
     output,
     watcher,
     highlighter,
+    statusBar,
     vscode.window.registerWebviewViewProvider(BuddyPanel.viewId, buddyPanel),
     watcher.onNewError((error) => {
       const ticket = ++latest;

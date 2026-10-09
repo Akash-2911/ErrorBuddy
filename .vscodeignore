@@ -3,8 +3,8 @@ src/**
 scripts/**
 demo/**
 node_modules/**
-!node_modules/@anthropic-ai/**
 esbuild.js
 tsconfig.json
 **/*.map
 ERRORBUDDY_PLAN.md
+.gitignore
