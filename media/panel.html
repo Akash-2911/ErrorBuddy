@@ -25,6 +25,7 @@
     <div id="streak" class="streak" title="Fixes in a row">
       <span class="icon-slot" data-icon="flame"></span><span id="streakCount">0</span> in a row
     </div>
+    <button id="profileBtn" class="icon-btn" type="button" title="Your profile" aria-label="Your profile" aria-expanded="false"><span class="icon-slot" data-icon="person"></span></button>
   </header>
 
   <main id="scene" class="scene is-idle">
@@ -68,6 +69,38 @@
       <button id="jumpBtn" type="button">Go to line</button>
     </section>
   </main>
+
+  <section id="profile" class="profile" hidden>
+    <button id="profileBack" class="link-btn" type="button">← Back</button>
+
+    <div class="profile-card">
+      <div id="profileInitial" class="profile-avatar" aria-hidden="true">?</div>
+      <div id="nameView" class="name-view">
+        <div id="profileName" class="profile-name"></div>
+        <button id="editName" class="link-btn" type="button">Edit name</button>
+      </div>
+      <form id="nameForm" class="name-form" hidden>
+        <label class="sr-only" for="nameInput">Username</label>
+        <input id="nameInput" type="text" maxlength="30" autocomplete="off" spellcheck="false">
+        <div class="name-actions">
+          <button type="submit">Save</button>
+          <button id="cancelName" class="secondary" type="button">Cancel</button>
+        </div>
+        <p class="hint">Leave it empty to use your computer's login name.</p>
+      </form>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div id="statStreak" class="stat-value">0</div><div class="stat-label">Streak</div></div>
+      <div class="stat"><div id="statBest" class="stat-value">0</div><div class="stat-label">Best streak</div></div>
+      <div class="stat"><div id="statFixes" class="stat-value">0</div><div class="stat-label">Total fixes</div></div>
+    </div>
+
+    <section class="block">
+      <h2>Achievements <span id="achCount" class="ach-count"></span></h2>
+      <ul id="achList" class="ach-list"></ul>
+    </section>
+  </section>
 
   <div id="mockBar" class="mock-bar" hidden>
     <span>Mock mode</span>

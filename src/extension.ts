@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import { ErrorWatcher } from './errorWatcher';
 import { createExplainer } from './ai/explainer';
+import { ACHIEVEMENTS } from './game/achievements';
 import { createGameEngine } from './game/engine';
 import { BuddyPanel } from './panel';
+import { getUsername, setUsername } from './profile';
 import {
   Achievement,
   BuddyError,
@@ -54,6 +56,8 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   };
   const postState = () => panel.post({ type: 'state', state: game.getState() });
+  const postProfile = () =>
+    panel.post({ type: 'profile', username: getUsername(), achievements: Object.values(ACHIEVEMENTS) });
 
   const handleNewError = async (error: BuddyError, ticket: number) => {
     if (ticket !== latest) {
@@ -127,6 +131,7 @@ export function activate(context: vscode.ExtensionContext): void {
     switch (msg.type) {
       case 'ready':
         postState();
+        postProfile();
         break;
       case 'setPersonality':
         enqueue('setPersonality', async () => {
@@ -136,6 +141,11 @@ export function activate(context: vscode.ExtensionContext): void {
         break;
       case 'jumpToLine':
         jumpToLine(msg.file, msg.line).catch((err) => output.appendLine(`[error] jumpToLine: ${err}`));
+        break;
+      case 'setUsername':
+        setUsername(msg.username)
+          .then(postProfile)
+          .catch((err) => output.appendLine(`[error] setUsername: ${err}`));
         break;
     }
   };
@@ -164,6 +174,9 @@ export function activate(context: vscode.ExtensionContext): void {
       if (e.affectsConfiguration('errorBuddy.apiKey')) {
         explainer = makeExplainer();
         cache.clear();
+      }
+      if (e.affectsConfiguration('errorBuddy.username')) {
+        postProfile();
       }
     }),
     vscode.commands.registerCommand('errorBuddy.resetStats', () =>

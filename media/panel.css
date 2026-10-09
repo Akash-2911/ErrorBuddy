@@ -563,6 +563,203 @@ button.quiet:hover {
   pointer-events: none;
 }
 
+/* ---------- Profile ---------- */
+
+.icon-btn {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  background: transparent;
+  color: var(--eb-fg);
+  border: 1px solid var(--eb-border);
+  padding: 5px 6px;
+  line-height: 1;
+}
+
+.icon-btn .icon-slot {
+  display: block;
+}
+
+.icon-btn:hover,
+.icon-btn.is-active {
+  background: var(--eb-surface);
+}
+
+.link-btn {
+  padding: 2px 0;
+  background: none;
+  color: var(--vscode-textLink-foreground, var(--eb-button-bg));
+  border: none;
+}
+
+.link-btn:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--eb-fg);
+  border-color: var(--eb-border);
+}
+
+button.secondary:hover {
+  background: var(--eb-surface);
+}
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fade-up 0.3s ease-out;
+}
+
+.profile > .link-btn {
+  align-self: flex-start;
+}
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  background: var(--eb-button-bg);
+  color: var(--eb-button-fg);
+  border: 2px solid var(--eb-frame);
+  border-radius: var(--eb-radius-inner);
+  box-shadow: 3px 3px 0 var(--eb-frame);
+  font-family: var(--vscode-editor-font-family, Consolas, "Courier New", monospace);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.name-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-name {
+  font-size: 1.3em;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 260px;
+}
+
+#nameInput {
+  width: 100%;
+  padding: 5px 8px;
+  background: var(--vscode-input-background, var(--fb-input-bg));
+  color: var(--vscode-input-foreground, var(--eb-fg));
+  border: 1px solid var(--vscode-input-border, var(--eb-input-border));
+  border-radius: var(--eb-radius-inner);
+  font: inherit;
+}
+
+#nameInput:focus-visible {
+  outline: 1px solid var(--eb-focus);
+  outline-offset: 0;
+}
+
+.name-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.name-actions button {
+  flex: 1;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.stat {
+  padding: 8px 4px;
+  background: var(--eb-surface);
+  border: 1px solid var(--eb-border);
+  border-radius: var(--eb-radius);
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.4em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  color: var(--eb-muted);
+  font-size: 0.8em;
+}
+
+.ach-count {
+  float: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ach {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ach-emoji {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  background: var(--eb-surface);
+  border: 1px solid var(--eb-border);
+  border-radius: var(--eb-radius-inner);
+  color: var(--eb-muted);
+}
+
+.ach.is-unlocked .ach-emoji {
+  background: var(--eb-gold-soft);
+  border-color: var(--eb-gold);
+  color: var(--eb-gold);
+}
+
+.ach-title {
+  font-weight: 600;
+}
+
+.ach-desc {
+  color: var(--eb-muted);
+  font-size: 0.85em;
+}
+
+.ach.is-locked {
+  opacity: 0.5;
+}
+
 /* ---------- Mock bar (browser preview only) ---------- */
 
 .mock-bar {

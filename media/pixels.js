@@ -187,6 +187,26 @@
       '....b...',
       '...b....'
     ],
+    person: [
+      '..cccc..',
+      '..cccc..',
+      '..cccc..',
+      '...cc...',
+      '.cccccc.',
+      'cccccccc',
+      'cccccccc',
+      'cccccccc'
+    ],
+    lock: [
+      '..cccc..',
+      '.c....c.',
+      '.c....c.',
+      'cccccccc',
+      'cccccccc',
+      'ccc..ccc',
+      'cccccccc',
+      'cccccccc'
+    ],
     check: [
       '........',
       '.......g',

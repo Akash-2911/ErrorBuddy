@@ -39,6 +39,21 @@
     fixList: document.getElementById('fixList'),
     jumpBtn: document.getElementById('jumpBtn'),
     toasts: document.getElementById('toasts'),
+    profileBtn: document.getElementById('profileBtn'),
+    profile: document.getElementById('profile'),
+    profileBack: document.getElementById('profileBack'),
+    profileInitial: document.getElementById('profileInitial'),
+    profileName: document.getElementById('profileName'),
+    nameView: document.getElementById('nameView'),
+    editName: document.getElementById('editName'),
+    nameForm: document.getElementById('nameForm'),
+    nameInput: document.getElementById('nameInput'),
+    cancelName: document.getElementById('cancelName'),
+    statStreak: document.getElementById('statStreak'),
+    statBest: document.getElementById('statBest'),
+    statFixes: document.getElementById('statFixes'),
+    achCount: document.getElementById('achCount'),
+    achList: document.getElementById('achList'),
     mockBar: document.getElementById('mockBar'),
     mockTheme: document.getElementById('mockTheme')
   };
@@ -51,6 +66,8 @@
   var idleTimer = 0;
   var toastQueue = [];
   var toastShowing = false;
+  var gameState = null;       // last 'state' message, for the profile page
+  var profile = null;         // last 'profile' message: { username, achievements }
 
   function send(msg) {
     if (vscode) {
@@ -242,10 +259,77 @@
     if (!state) {
       return;
     }
+    gameState = state;
     if (state.personality) {
       el.personality.value = state.personality;
     }
     setStreak(state.streak, false);
+    renderProfile();
+  }
+
+  // ---------- Profile page ----------
+
+  function showProfile(open) {
+    el.profile.hidden = !open;
+    el.scene.hidden = open;
+    el.profileBtn.setAttribute('aria-expanded', String(open));
+    el.profileBtn.classList.toggle('is-active', open);
+    if (!open) {
+      editName(false);
+    }
+    renderProfile();
+  }
+
+  function editName(editing) {
+    el.nameForm.hidden = !editing;
+    el.nameView.hidden = editing;
+    if (editing) {
+      el.nameInput.value = profile ? profile.username : '';
+      el.nameInput.focus();
+      el.nameInput.select();
+    }
+  }
+
+  function renderProfile() {
+    if (!profile) {
+      return;
+    }
+    var name = profile.username || 'buddy';
+    el.profileName.textContent = name;
+    el.profileInitial.textContent = Array.from(name)[0].toUpperCase();
+
+    var state = gameState || { streak: 0, bestStreak: 0, totalFixes: 0, unlocked: [] };
+    el.statStreak.textContent = String(state.streak || 0);
+    el.statBest.textContent = String(state.bestStreak || 0);
+    el.statFixes.textContent = String(state.totalFixes || 0);
+
+    var unlockedIds = (state.unlocked || []).map(function (a) { return a.id; });
+    var all = profile.achievements || [];
+    el.achCount.textContent = unlockedIds.length + ' / ' + all.length;
+    el.achList.textContent = '';
+    all.forEach(function (achievement) {
+      var unlocked = unlockedIds.indexOf(achievement.id) !== -1;
+      var li = document.createElement('li');
+      li.className = 'ach' + (unlocked ? ' is-unlocked' : ' is-locked');
+
+      var emoji = document.createElement('div');
+      emoji.className = 'ach-emoji';
+      emoji.appendChild(pixels.icon(unlocked ? ACHIEVEMENT_ICONS[achievement.id] || 'trophy' : 'lock'));
+
+      var body = document.createElement('div');
+      var title = document.createElement('div');
+      title.className = 'ach-title';
+      title.textContent = achievement.title;
+      var desc = document.createElement('div');
+      desc.className = 'ach-desc';
+      desc.textContent = achievement.description;
+      body.appendChild(title);
+      body.appendChild(desc);
+
+      li.appendChild(emoji);
+      li.appendChild(body);
+      el.achList.appendChild(li);
+    });
   }
 
   // ---------- Achievement toasts (one at a time, 4 seconds each) ----------
@@ -322,6 +406,10 @@
       case 'state':
         applyState(msg.state);
         break;
+      case 'profile':
+        profile = { username: msg.username, achievements: msg.achievements };
+        renderProfile();
+        break;
       case 'idle':
         showIdle();
         break;
@@ -346,6 +434,31 @@
     slot.appendChild(pixels.icon(slot.dataset.icon));
   });
   drawMascot(IDLE_MASCOT);
+
+  el.profileBtn.addEventListener('click', function () {
+    showProfile(el.profile.hidden);
+  });
+  el.profileBack.addEventListener('click', function () {
+    showProfile(false);
+  });
+  el.editName.addEventListener('click', function () {
+    editName(true);
+  });
+  el.cancelName.addEventListener('click', function () {
+    editName(false);
+  });
+  el.nameForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var name = el.nameInput.value.replace(/\s+/g, ' ').trim();
+    send({ type: 'setUsername', username: name });
+    // Show it right away; the extension answers with the final name (login name if empty).
+    if (profile && name) {
+      profile.username = name;
+    }
+    editName(false);
+    renderProfile();
+  });
+
   setStreak(0, false);
   send({ type: 'ready' });
 
@@ -400,6 +513,15 @@
       narrator: 'And so, `userName` finds its place in the ecosystem. Life goes on.'
     };
 
+    var MOCK_ACHIEVEMENTS = [
+      { id: 'first_fix', title: 'First Blood', description: 'Fixed your very first error.', emoji: '🩹' },
+      { id: 'night_owl', title: 'Night Owl', description: 'Hit an error after 11 pm or before 4 am.', emoji: '🦉' },
+      { id: 'semicolon_sommelier', title: 'Semicolon Sommelier', description: 'Met the same syntax error 5 times.', emoji: '🍷' },
+      { id: 'streak_5', title: 'On Fire', description: 'Fixed 5 errors in a row.', emoji: '🔥' },
+      { id: 'streak_10', title: 'Unstoppable', description: 'Fixed 10 errors in a row.', emoji: '⚡' },
+      { id: 'legendary_hunter', title: 'Legendary Hunter', description: 'Slayed a legendary error.', emoji: '🐉' }
+    ];
+
     function pick() {
       var chosen = el.personality.value;
       return chosen === 'random' ? REAL[Math.floor(Math.random() * REAL.length)] : chosen;
@@ -417,7 +539,7 @@
           bestStreak: Math.max(streak, 5),
           totalFixes: streak,
           personality: el.personality.value,
-          unlocked: []
+          unlocked: MOCK_ACHIEVEMENTS.slice(0, 2)
         }
       });
     }
@@ -507,6 +629,7 @@
       root.dataset.theme = dark ? 'light' : 'dark';
     });
 
+    post({ type: 'profile', username: 'shivang', achievements: MOCK_ACHIEVEMENTS });
     postState();
     next();
     window.setInterval(next, 3000);
