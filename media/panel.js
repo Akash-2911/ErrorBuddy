@@ -21,7 +21,6 @@
   var vscode = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null;
 
   var el = {
-    personality: document.getElementById('personality'),
     streak: document.getElementById('streak'),
     streakCount: document.getElementById('streakCount'),
     scene: document.getElementById('scene'),
@@ -260,9 +259,6 @@
       return;
     }
     gameState = state;
-    if (state.personality) {
-      el.personality.value = state.personality;
-    }
     setStreak(state.streak, false);
     renderProfile();
   }
@@ -420,10 +416,6 @@
     handle(event.data);
   });
 
-  el.personality.addEventListener('change', function () {
-    send({ type: 'setPersonality', personality: el.personality.value });
-  });
-
   el.jumpBtn.addEventListener('click', function () {
     if (jumpTarget) {
       send({ type: 'jumpToLine', file: jumpTarget.file, line: jumpTarget.line });
@@ -523,8 +515,7 @@
     ];
 
     function pick() {
-      var chosen = el.personality.value;
-      return chosen === 'random' ? REAL[Math.floor(Math.random() * REAL.length)] : chosen;
+      return REAL[Math.floor(Math.random() * REAL.length)];
     }
 
     function post(msg) {
@@ -538,7 +529,7 @@
           streak: streak,
           bestStreak: Math.max(streak, 5),
           totalFixes: streak,
-          personality: el.personality.value,
+          personality: 'random',
           unlocked: MOCK_ACHIEVEMENTS.slice(0, 2)
         }
       });

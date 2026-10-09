@@ -42,6 +42,16 @@
           "default": "",
           "markdownDescription": "Anthropic API key used for explanations. Falls back to the `ANTHROPIC_API_KEY` environment variable; with neither, ErrorBuddy uses offline canned responses."
         },
+        "errorBuddy.speakRoasts": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Read each roast out loud with your computer's built-in voice. Toggle quickly with **ErrorBuddy: Toggle Spoken Roasts**."
+        },
+        "errorBuddy.voice": {
+          "type": "string",
+          "default": "David",
+          "markdownDescription": "Which installed voice reads the roasts, e.g. `David`, `Zira` or `Mark`. Add more in Windows Settings > Time & language > Speech > Add voices."
+        },
         "errorBuddy.username": {
           "type": "string",
           "default": "",
@@ -57,6 +67,11 @@
         "category": "ErrorBuddy"
       },
       {
+        "command": "errorBuddy.toggleSpeech",
+        "title": "Toggle Spoken Roasts",
+        "category": "ErrorBuddy"
+      },
+      {
         "command": "errorBuddy.jumpToCurrentError",
         "title": "Jump to Current Error",
         "category": "ErrorBuddy"
@@ -68,7 +83,8 @@
     "compile": "npm run check-types && node esbuild.js",
     "watch": "node esbuild.js --watch",
     "package": "npm run check-types && node esbuild.js --production",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "vsix": "npx --yes @vscode/vsce package --no-dependencies --allow-missing-repository --skip-license -o errorbuddy.vsix"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1"

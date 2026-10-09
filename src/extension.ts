@@ -3,8 +3,11 @@ import { ErrorWatcher } from './errorWatcher';
 import { createExplainer } from './ai/explainer';
 import { ACHIEVEMENTS } from './game/achievements';
 import { createGameEngine } from './game/engine';
+import { ErrorHighlighter } from './highlight';
 import { BuddyPanel } from './panel';
 import { getUsername, setUsername } from './profile';
+import { RoastSpeaker } from './speech';
+import { BuddyStatusBar } from './statusBar';
 import {
   Achievement,
   BuddyError,
@@ -25,6 +28,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const makeExplainer = (): Explainer => createExplainer(getApiKey());
   let explainer = makeExplainer();
   const game: GameEngine = createGameEngine(context.globalState);
+  // There's no personality picker any more; an old saved pick would pin the mascot to one costume.
+  void game.setPersonality('random');
   const buddyPanel = new BuddyPanel(context.extensionUri);
   // Everything sent to the panel is also logged, which makes demo-day debugging much easier.
   const panel = {
@@ -36,6 +41,10 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   const watcher = new ErrorWatcher();
+  const highlighter = new ErrorHighlighter();
+  const statusBar = new BuddyStatusBar();
+  const speaker = new RoastSpeaker();
+  statusBar.setStreak(game.getState().streak);
   const cache = new Map<string, BuddyResponse>();
 
   // What is on screen right now, so a later fix can be celebrated in the same voice.
@@ -55,7 +64,35 @@ export function activate(context: vscode.ExtensionContext): void {
       panel.post({ type: 'achievement', achievement });
     }
   };
-  const postState = () => panel.post({ type: 'state', state: game.getState() });
+  const postState = () => {
+    const state = game.getState();
+    statusBar.setStreak(state.streak);
+    panel.post({ type: 'state', state });
+  };
+
+  // The line highlight and status bar follow whatever error the panel is talking about.
+  const markShown = (error: BuddyError, legendary: boolean) => {
+    highlighter.show(error, legendary);
+    statusBar.showError(error);
+  };
+  const clearMarks = () => {
+    highlighter.clear();
+    statusBar.clearError();
+    speaker.stop();
+  };
+
+  /** Pops the ErrorBuddy panel open, then hands the keyboard straight back to the editor. */
+  const revealPanel = async () => {
+    const editor = vscode.window.activeTextEditor;
+    try {
+      await vscode.commands.executeCommand('errorBuddy.panel.focus');
+      if (editor) {
+        await vscode.window.showTextDocument(editor.document, { viewColumn: editor.viewColumn, preserveFocus: false });
+      }
+    } catch (err) {
+      output.appendLine(`[error] revealPanel: ${err}`);
+    }
+  };
   const postProfile = () =>
     panel.post({ type: 'profile', username: getUsername(), achievements: Object.values(ACHIEVEMENTS) });
 
@@ -65,7 +102,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     const result = await game.onErrorShown(error, new Date());
     shown = { errorId: error.id, personality: result.personality, legendary: result.legendary };
+    await revealPanel();
     panel.post({ type: 'thinking', error, personality: result.personality });
+    markShown(error, result.legendary);
 
     const cacheKey = `${error.message}::${result.personality}::${result.legendary}`;
     let response = cache.get(cacheKey);
@@ -85,6 +124,9 @@ export function activate(context: vscode.ExtensionContext): void {
       return; // the user moved on while we were thinking
     }
     panel.post({ type: 'response', error, response });
+    if (speakRoasts()) {
+      speaker.speak(response.reaction, response.legendary, speechVoice());
+    }
     postAchievements(result.newAchievements);
     postState();
   };
@@ -92,6 +134,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const handleFixed = async (error: BuddyError) => {
     const was = shown?.errorId === error.id ? shown : undefined;
     shown = undefined;
+    clearMarks();
     const personality = was?.personality ?? 'pirate';
     const [celebration, result] = await Promise.all([
       explainer.celebrate(error, personality).catch(() => `Fixed! "${error.message}" is gone.`),
@@ -112,6 +155,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     if (ticket === latest) {
       shown = undefined;
+      clearMarks();
       panel.post({ type: 'idle' });
     }
   };
@@ -154,6 +198,9 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     output,
     watcher,
+    highlighter,
+    statusBar,
+    speaker,
     vscode.window.registerWebviewViewProvider(BuddyPanel.viewId, buddyPanel),
     watcher.onNewError((error) => {
       const ticket = ++latest;
@@ -179,6 +226,14 @@ export function activate(context: vscode.ExtensionContext): void {
         postProfile();
       }
     }),
+    vscode.commands.registerCommand('errorBuddy.toggleSpeech', async () => {
+      const on = !speakRoasts();
+      await vscode.workspace.getConfiguration('errorBuddy').update('speakRoasts', on, vscode.ConfigurationTarget.Global);
+      if (!on) {
+        speaker.stop();
+      }
+      vscode.window.showInformationMessage(on ? 'ErrorBuddy will read roasts out loud. 🔊' : 'ErrorBuddy roasts are muted. 🔇');
+    }),
     vscode.commands.registerCommand('errorBuddy.resetStats', () =>
       enqueue('reset', async () => {
         await game.reset();
@@ -203,6 +258,14 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {}
 
 /** Setting first, then the ANTHROPIC_API_KEY env var. Undefined means offline/fallback mode. */
+function speakRoasts(): boolean {
+  return vscode.workspace.getConfiguration('errorBuddy').get<boolean>('speakRoasts', true);
+}
+
+function speechVoice(): string {
+  return vscode.workspace.getConfiguration('errorBuddy').get<string>('voice', 'David') || 'David';
+}
+
 function getApiKey(): string | undefined {
   const fromSetting = vscode.workspace.getConfiguration('errorBuddy').get<string>('apiKey')?.trim();
   return fromSetting || process.env.ANTHROPIC_API_KEY || undefined;
